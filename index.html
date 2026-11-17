@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="mg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suivi INV by Princi</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cloudflare.com"></script>
+</head>
+<body>
+    <div class="main-dashboard">
+        <!-- ILANY ANKAVIA : Lohateny, Sivana, ary Compteur de vitesse -->
+        <div class="left-panel">
+            <h2>SUIVI INVENTAIRE PAR JOUR</h2>
+
+            <div class="filters-wrapper no-print">
+                <div class="filter-box">
+                    <label for="dateFilter">Daty :</label>
+                    <input type="date" id="dateFilter" onchange="onDateChange()">
+                </div>
+                <div class="filter-box">
+                    <label for="agentFilter">Agent :</label>
+                    <select id="agentFilter" onchange="appliquerFiltres()">
+                        <option value="ALL">TOUS</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- COMPTEUR DE VITESSE MOTO -->
+            <div class="speedometer-wrapper">
+                <!-- ZORONY AMBONY ANKAVIA : TISSU -->
+                <div class="famille-badge tissu-badge">
+                    <span class="famille-title">TISSU</span>
+                    <span class="famille-count" id="tissuCount">0</span>
+                </div>
+
+                <!-- ZORONY AMBONY ANKAVANANA : ACCESSOIRE -->
+                <div class="famille-badge accessoire-badge">
+                    <span class="famille-title">ACCESSOIRE</span>
+                    <span class="famille-count" id="accessoireCount">0</span>
+                </div>
+
+                <svg viewBox="-30 -40 400 325" class="speedo-svg">
+                    <defs>
+                        <linearGradient id="speedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#ea4335" />
+                            <stop offset="40%" stop-color="#1a73e8" />
+                            <stop offset="65%" stop-color="#fbbc04" />
+                            <stop offset="100%" stop-color="#34a853" />
+                        </linearGradient>
+                        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="2.5" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                    </defs>
+
+                    <path d="M 27 247.5 A 165 165 0 1 1 313 247.5" fill="none" stroke="#1e2229" stroke-width="28" stroke-linecap="round" />
+                    <path d="M 27 247.5 A 165 165 0 1 1 313 247.5" fill="none" stroke="url(#speedGrad)" stroke-width="12" stroke-linecap="round" />
+
+                    <g id="speedoTicks"></g>
+
+                    <rect x="128" y="88" width="84" height="36" rx="7" fill="#111317" stroke="#3c4043" stroke-width="1.5" />
+                    <text x="170" y="114" text-anchor="middle" fill="#00e676" font-family="'Courier New', monospace" font-size="24" font-weight="bold" id="uniqueCount">0</text>
+                    <text x="170" y="78" text-anchor="middle" fill="#9aa0a6" font-size="10" font-weight="bold" letter-spacing="1.2">RÉFÉRENCES</text>
+
+                    <g id="needleGroup" class="needle">
+                        <polygon points="166,165 174,165 170,12" fill="rgba(0,0,0,0.45)" transform="translate(2, 2)" />
+                        <polygon points="165,165 175,165 170,10" fill="#ff3b30" filter="url(#glow)" />
+                    </g>
+
+                    <circle cx="170" cy="165" r="16" fill="#2c3038" stroke="#5f6368" stroke-width="2.5" />
+                    <circle cx="170" cy="165" r="7" fill="#ff3b30" />
+                </svg>
+                <div class="counter-label" id="counterLabel">Référence Unique</div>
+            </div>
+
+            <div class="status no-print" id="statusMsg">ACTUALISATION ENCOURS...</div>
+        </div>
+
+        <!-- ILANY ANKAVANANA : Bokotra rehetra sy Tabilao DETAILS -->
+        <div class="right-panel">
+            <div class="actions-wrapper no-print">
+                <button class="btn btn-details" id="btnToggleDetails" onclick="toggleDetails()">DETAILS</button>
+                <button class="btn btn-refresh" onclick="chargerDonnees()">Havaozina (Actualiser)</button>
+                <button class="btn btn-excel" onclick="exporterExcel()">Exporter Excel</button>
+                <button class="btn btn-print" onclick="window.print()">Imprimer</button>
+            </div>
+
+            <!-- Miafina aloha ity tabilao ity mandra-panindry ny bokotra DETAILS -->
+            <div class="table-container" id="tableContainer" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 45px;">#</th>
+                            <th>Référence</th>
+                            <th>Famille</th>
+                            <th>Agent</th>
+                        </tr>
+                    </thead>
+                    <tbody id="refTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
