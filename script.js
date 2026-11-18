@@ -344,9 +344,6 @@ function appliquerFiltres() {
 }
 
 // Fiasa mamadika ny angona voasivana ho rakitra Excel (Entête = Agent, Corps = Références)
-// Fiasa mamadika ny angona voasivana ho rakitra Excel (Loko mirindra + Synthèse + Tie-breaker ELEMENT)
-// Fiasa mamadika ny angona voasivana ho rakitra Excel (Loko mirindra + Synthèse + Tie-breaker ELEMENT)
-// Fiasa mamadika ny angona voasivana ho rakitra Excel (Loko mirindra + Synthèse + Tie-breaker ELEMENT)
 function exporterExcel() {
     if (currentFilteredList.length === 0) {
         alert("Tsy misy angona haondrana ho Excel amin'io daty na Agent io.");
@@ -354,39 +351,10 @@ function exporterExcel() {
     }
 
     const selectedIsoDate = document.getElementById("dateFilter").value;
-    const targetDateStr = formatInputDateToSheetFormat(selectedIsoDate);
     const selectedAgent = document.getElementById("agentFilter").value;
     const agentSuffix = selectedAgent === "ALL" ? "Tous" : selectedAgent.replace(/\s+/g, "_").replace(/\//g, "-");
 
-    // 1. Manisa mivantana ny isan'ny ELEMENT vitan'ny agent tsirairay avy amin'ny allRowsData
-    const binomeLookup = construireMappingBinomes(targetDateStr);
-    const localElementsCount = {};
-
-    allRowsData.forEach(row => {
-        const refCell = row.c.at(0);     // C : REFERENCE
-        const agentCell = row.c.at(1);   // K : AGENT
-        const dateCell = row.c.at(2);    // P : DATE DE SAISI
-        const elementCell = row.c.at(4); // G : ELEMENT
-
-        if (refCell && refCell.v && dateCell) {
-            const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "Tsy voalaza";
-            const rawElement = (elementCell && elementCell.v) ? String(elementCell.v).trim() : "";
-            const dateOnly = extractDateOnly(dateCell);
-
-            if (rawAgent.toUpperCase() === "ORLI") return;
-
-            const finalAgent = normaliserAgent(rawAgent, binomeLookup);
-            const matchDate = (dateOnly === targetDateStr);
-            const matchAgent = (selectedAgent === "ALL" || finalAgent === selectedAgent);
-
-            if (matchDate && matchAgent) {
-                if (!localElementsCount[finalAgent]) localElementsCount[finalAgent] = 0;
-                if (rawElement !== "") localElementsCount[finalAgent] += 1;
-            }
-        }
-    });
-
-    // 2. Manambatra ny références isaky ny Agent
+    // 1. Manambatra ny références isaky ny Agent
     const groupesParAgent = {};
     currentFilteredList.forEach(item => {
         const agentName = item["Agent"] || "Tsy voalaza";
@@ -402,7 +370,7 @@ function exporterExcel() {
 
     const agentsTries = Object.keys(groupesParAgent).sort();
 
-    // 3. Kajy MIN sy MAX (Raha mitovy ny Référence, dia jerena ny ELEMENT)
+    // 2. Kajy MIN sy MAX (Raha mitovy ny Référence, dia jerena ny ELEMENT)
     const totalGeneral = currentFilteredList.length;
     let minCount = Infinity;
     let minElem = Infinity;
@@ -414,7 +382,7 @@ function exporterExcel() {
 
     agentsTries.forEach(agent => {
         const refCount = groupesParAgent[agent].length;
-        const elemCount = localElementsCount[agent] || 0;
+        const elemCount = agentElementsCount[agent] || 0;
 
         if (refCount < minCount || (refCount === minCount && elemCount < minElem)) {
             minCount = refCount;
@@ -436,7 +404,7 @@ function exporterExcel() {
     const minAgentText = `${minAgents.join(", ")} (${minElem} élém.)`;
     const maxAgentText = `${maxAgents.join(", ")} (${maxElem} élém.)`;
 
-    // 4. Fanomanana ny andalana eo amin'ny ankavia (A -> D)
+    // 3. Fanomanana ny andalana eo amin'ny ankavia (A -> D)
     const leftRows = [];
     agentsTries.forEach(agent => {
         const liste = groupesParAgent[agent];
@@ -451,7 +419,9 @@ function exporterExcel() {
 
     const totalGridRows = Math.max(leftRows.length, agentsTries.length + 4);
     const bdr = "border: 1px solid #94a3b8;";
-    // 4. Fanamboarana ny takelaka Excel
+    // 5. Fanamboarana ny takelaka Excel (TOTAL GÉNÉRAL nafindra sy natambatra eo amin'ny J-K)
+    const finalGridRows = Math.max(totalGridRows, 7);
+
     let tableHtml = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">
         <head><meta charset="UTF-8"></head>
@@ -460,15 +430,15 @@ function exporterExcel() {
             <colgroup>
                 <col width="45"><col width="105"><col width="175"><col width="125">
                 <col width="25"><col width="25">
-                <col width="140"><col width="185"><col width="55"><col width="190"><col width="190">
+                <col width="185"><col width="55"><col width="190"><col width="190">
             </colgroup>
             <tbody>
     `;
 
-    for (let r = 0; r < totalGridRows; r++) {
+    for (let r = 0; r < finalGridRows; r++) {
         tableHtml += `<tr>`;
 
-        // Ankavia : Tabilao isaky ny Agent (A -> D)
+        // 1. Ankavia : Tabilao isaky ny Agent (A -> D)
         const leftItem = leftRows[r];
         if (!leftItem || leftItem.type === "spacer") {
             tableHtml += `<td colspan="4" style="height: 14px;"></td>`;
@@ -496,19 +466,10 @@ function exporterExcel() {
             `;
         }
 
-        // Elanelana (E sy F)
+        // 2. Elanelana (E sy F)
         tableHtml += `<td colspan="2"></td>`;
 
-        // Faritra Manga (G) : Total Général
-        if (r === 0) {
-            tableHtml += `<td style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">TOTAL GÉNÉRAL</td>`;
-        } else if (r === 1) {
-            tableHtml += `<td style="background-color: #eff6ff; color: #1e3a8a; font-weight: bold; font-size: 14pt; text-align: center; padding: 8px; ${bdr}">${totalGeneral}</td>`;
-        } else {
-            tableHtml += `<td></td>`;
-        }
-
-        // Faritra Mainty (H sy I) : Lisitry ny Agent
+        // 3. Faritra Mainty (G sy H) : Lisitry ny Agent
         if (r === 0) {
             tableHtml += `<td colspan="2" style="background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">AGENTS ACTIFS (${agentsTries.length})</td>`;
         } else if (r <= agentsTries.length) {
@@ -522,26 +483,30 @@ function exporterExcel() {
             tableHtml += `<td colspan="2"></td>`;
         }
 
-        // Faritra Mena (J) : Minimum Référence + Agent
+        // 4. Faritra Ankavanana (I sy J) : MIN, MAX, ary TOTAL GÉNÉRAL mivelatra eo ambany
         if (r === 0) {
-            tableHtml += `<td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">MIN RÉFÉRENCE</td>`;
+            tableHtml += `
+                <td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">MIN RÉFÉRENCE</td>
+                <td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">MAX RÉFÉRENCE</td>
+            `;
         } else if (r === 1) {
-            tableHtml += `<td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 13pt; text-align: center; padding: 6px; ${bdr}">${minCount}</td>`;
+            tableHtml += `
+                <td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 13pt; text-align: center; padding: 6px; ${bdr}">${minCount}</td>
+                <td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 13pt; text-align: center; padding: 6px; ${bdr}">${maxCount}</td>
+            `;
         } else if (r === 2) {
-            tableHtml += `<td style="background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; padding: 5px; ${bdr}">${minAgentText}</td>`;
+            tableHtml += `
+                <td style="background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; padding: 5px; ${bdr}">${minAgentText}</td>
+                <td style="background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; padding: 5px; ${bdr}">${maxAgentText}</td>
+            `;
+        } else if (r === 4) {
+            // TOTAL GÉNÉRAL Lohateny (mivelatra eo amin'ny tsanganana roa)
+            tableHtml += `<td colspan="2" style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; padding: 7px; ${bdr}">TOTAL GÉNÉRAL RÉFÉRENCES</td>`;
+        } else if (r === 5) {
+            // TOTAL GÉNÉRAL Isa (mivelatra eo amin'ny tsanganana roa)
+            tableHtml += `<td colspan="2" style="background-color: #eff6ff; color: #1e3a8a; font-weight: bold; font-size: 16pt; text-align: center; padding: 10px; ${bdr}">${totalGeneral}</td>`;
         } else {
-            tableHtml += `<td></td>`;
-        }
-
-        // Faritra Maitso (K) : Maximum Référence + Agent
-        if (r === 0) {
-            tableHtml += `<td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">MAX RÉFÉRENCE</td>`;
-        } else if (r === 1) {
-            tableHtml += `<td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 13pt; text-align: center; padding: 6px; ${bdr}">${maxCount}</td>`;
-        } else if (r === 2) {
-            tableHtml += `<td style="background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; padding: 5px; ${bdr}">${maxAgentText}</td>`;
-        } else {
-            tableHtml += `<td></td>`;
+            tableHtml += `<td colspan="2"></td>`;
         }
 
         tableHtml += `</tr>`;
