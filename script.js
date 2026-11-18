@@ -344,8 +344,7 @@ function appliquerFiltres() {
 }
 
 // Fiasa mamadika ny angona voasivana ho rakitra Excel (Entête = Agent, Corps = Références)
-// Fiasa mamadika ny angona voasivana ho rakitra Excel (Misy Synthèse eo amin'ny G, H-I, J, K)
-// Fiasa mamadika ny angona voasivana ho rakitra Excel (Misy Synthèse eo amin'ny G, H-I, J, K)
+// Fiasa mamadika ny angona voasivana ho rakitra Excel (Loko mirindra + Synthèse + Tie-breaker ELEMENT)
 function exporterExcel() {
     if (currentFilteredList.length === 0) {
         alert("Tsy misy angona haondrana ho Excel amin'io daty na Agent io.");
@@ -372,32 +371,40 @@ function exporterExcel() {
 
     const agentsTries = Object.keys(groupesParAgent).sort();
 
-    // 2. Kajy ho an'ny faritra 4 (Manga, Mainty, Mena, Maitso)
+    // 2. Kajy MIN sy MAX (Raha mitovy ny Référence, dia jerena ny ELEMENT)
     const totalGeneral = currentFilteredList.length;
     let minCount = Infinity;
-    let maxCount = -Infinity;
+    let minElem = Infinity;
     let minAgents = [];
+
+    let maxCount = -Infinity;
+    let maxElem = -Infinity;
     let maxAgents = [];
 
     agentsTries.forEach(agent => {
-        const count = groupesParAgent[agent].length;
-        if (count < minCount) {
-            minCount = count;
+        const refCount = groupesParAgent[agent].length;
+        const elemCount = agentElementsCount[agent] || 0;
+
+        if (refCount < minCount || (refCount === minCount && elemCount < minElem)) {
+            minCount = refCount;
+            minElem = elemCount;
             minAgents = [agent];
-        } else if (count === minCount) {
+        } else if (refCount === minCount && elemCount === minElem) {
             minAgents.push(agent);
         }
 
-        if (count > maxCount) {
-            maxCount = count;
+        if (refCount > maxCount || (refCount === maxCount && elemCount > maxElem)) {
+            maxCount = refCount;
+            maxElem = elemCount;
             maxAgents = [agent];
-        } else if (count === maxCount) {
+        } else if (refCount === maxCount && elemCount === maxElem) {
             maxAgents.push(agent);
         }
     });
 
-    const minAgentText = minAgents.join(", ");
-    const maxAgentText = maxAgents.join(", ");
+    const minAgentText = `${minAgents.join(", ")} (${minElem} élém.)`;
+    const maxAgentText = `${maxAgents.join(", ")} (${maxElem} élém.)`;
+
     // 3. Fanomanana ny andalana eo amin'ny ankavia (A -> D)
     const leftRows = [];
     agentsTries.forEach(agent => {
@@ -413,8 +420,7 @@ function exporterExcel() {
 
     const totalGridRows = Math.max(leftRows.length, agentsTries.length + 4);
     const bdr = "border: 1px solid #94a3b8;";
-
-    // 4. Fanamboarana ny takelaka Excel (Inline styles mba havoakan'ny Excel ny loko sy sisiny)
+    // 4. Fanamboarana ny takelaka Excel
     let tableHtml = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">
         <head><meta charset="UTF-8"></head>
@@ -423,7 +429,7 @@ function exporterExcel() {
             <colgroup>
                 <col width="45"><col width="105"><col width="175"><col width="125">
                 <col width="25"><col width="25">
-                <col width="140"><col width="185"><col width="55"><col width="180"><col width="180">
+                <col width="140"><col width="185"><col width="55"><col width="190"><col width="190">
             </colgroup>
             <tbody>
     `;
