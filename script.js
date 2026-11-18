@@ -344,6 +344,7 @@ function appliquerFiltres() {
 }
 
 // Fiasa mamadika ny angona voasivana ho rakitra Excel (Entête = Agent, Corps = Références)
+// Fiasa mamadika ny angona voasivana ho rakitra Excel (Paozy madio sy mirindra)
 function exporterExcel() {
     if (currentFilteredList.length === 0) {
         alert("Tsy misy angona haondrana ho Excel amin'io daty na Agent io.");
@@ -386,7 +387,7 @@ function exporterExcel() {
                 aoaData.push([index + 1, row.date, row.ref, row.famille]);
             });
 
-            // Andalana banga manasaraka ny agent manaraka
+            // Andalana banga manasaraka
             aoaData.push([]);
         });
 
@@ -404,50 +405,66 @@ function exporterExcel() {
         return;
     }
 
-    // 3. Raha tsy tafiditra ny CDN (Secours HTML ho lasa .xls)
+    // 3. Secours HTML ho lasa .xls (Loko madio, mijanona eo amin'ny colonnes 4 ihany)
     let tableHtml = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">
-        <head><meta charset="UTF-8"></head>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                table { border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 11pt; }
+                td, th { border: 1px solid #d0d7de; padding: 6px 10px; }
+                .agent-header { background-color: #1f4e78; color: #ffffff; font-weight: bold; text-align: left; font-size: 11pt; }
+                .col-header { background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; }
+                .row-even { background-color: #ffffff; }
+                .row-odd { background-color: #f9fbfd; }
+                .spacer { border: none; height: 12px; background-color: #ffffff; }
+            </style>
+        </head>
         <body>
-        <table border="1">
+        <table>
+            <colgroup>
+                <col width="50">
+                <col width="110">
+                <col width="180">
+                <col width="130">
+            </colgroup>
+            <tbody>
     `;
 
     agentsTries.forEach(agent => {
         const liste = groupesParAgent[agent];
 
-        // ENTÊTE : Anaran'ny Agent (mitambatra colonnes 4)
+        // ENTÊTE : Anaran'ny Agent (Manga matroka madio, mijanona eo amin'ny colonnes 4 ihany)
         tableHtml += `
-            <thead>
-                <tr style="background-color: #0d47a1; color: white; font-weight: bold; font-size: 14px;">
-                    <th colspan="4" style="text-align: left; padding: 6px;">AGENT : ${agent} (${liste.length} réf.)</th>
-                </tr>
-                <tr style="background-color: #1a73e8; color: white; font-weight: bold;">
-                    <th>N°</th>
-                    <th>Date Saisie</th>
-                    <th>Référence</th>
-                    <th>Famille</th>
-                </tr>
-            </thead>
-            <tbody>
+            <tr>
+                <td colspan="4" class="agent-header">AGENT : ${agent} (${liste.length} réf.)</td>
+            </tr>
+            <tr>
+                <td class="col-header">N°</td>
+                <td class="col-header">Date Saisie</td>
+                <td class="col-header">Référence</td>
+                <td class="col-header">Famille</td>
+            </tr>
         `;
 
-        // CORPS : Ny références vitany
+        // CORPS : Ny références vitany (mifandimby fotsy sy volomparasy tanora malefaka)
         liste.forEach((row, index) => {
+            const rowClass = index % 2 === 0 ? "row-even" : "row-odd";
             tableHtml += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${row.date}</td>
-                    <td>${row.ref}</td>
+                <tr class="${rowClass}">
+                    <td style="text-align: center;">${index + 1}</td>
+                    <td style="text-align: center;">${row.date}</td>
+                    <td><strong>${row.ref}</strong></td>
                     <td>${row.famille}</td>
                 </tr>
             `;
         });
 
         // Andalana banga manasaraka
-        tableHtml += `<tr><td colspan="4" style="border: none; height: 15px;"></td></tr></tbody>`;
+        tableHtml += `<tr><td colspan="4" class="spacer"></td></tr>`;
     });
 
-    tableHtml += `</table></body></html>`;
+    tableHtml += `</tbody></table></body></html>`;
 
     const blob = new Blob(["\ufeff", tableHtml], { type: "application/vnd.ms-excel;charset=utf-8" });
     const url = URL.createObjectURL(blob);
