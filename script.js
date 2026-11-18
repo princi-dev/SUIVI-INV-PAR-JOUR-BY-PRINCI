@@ -345,6 +345,7 @@ function appliquerFiltres() {
 
 // Fiasa mamadika ny angona voasivana ho rakitra Excel (Entête = Agent, Corps = Références)
 // Fiasa mamadika ny angona voasivana ho rakitra Excel (Misy Synthèse eo amin'ny G, H-I, J, K)
+// Fiasa mamadika ny angona voasivana ho rakitra Excel (Misy Synthèse eo amin'ny G, H-I, J, K)
 function exporterExcel() {
     if (currentFilteredList.length === 0) {
         alert("Tsy misy angona haondrana ho Excel amin'io daty na Agent io.");
@@ -411,44 +412,18 @@ function exporterExcel() {
     });
 
     const totalGridRows = Math.max(leftRows.length, agentsTries.length + 4);
+    const bdr = "border: 1px solid #94a3b8;";
 
-    // 4. Fanamboarana ny takelaka Excel (Endrika matihanina, tsy misy loko mihoatra ny tabilao)
+    // 4. Fanamboarana ny takelaka Excel (Inline styles mba havoakan'ny Excel ny loko sy sisiny)
     let tableHtml = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body { background-color: #ffffff; }
-                table { border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 10.5pt; }
-                .no-border { border: none; background-color: transparent; }
-                .cell { border: 1px solid #cbd5e1; padding: 5px 8px; }
-                .agent-header { background-color: #1e3a8a; color: #ffffff; font-weight: bold; text-align: left; border: 1px solid #1e3a8a; }
-                .col-header { background-color: #dbeafe; color: #1e3a8a; font-weight: bold; text-align: center; border: 1px solid #93c5fd; }
-                .row-even { background-color: #ffffff; }
-                .row-odd { background-color: #f8fafc; }
-                .total-row { background-color: #e2e8f0; color: #0f172a; font-weight: bold; border: 1px solid #cbd5e1; }
-                
-                .blue-head { background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #1d4ed8; }
-                .blue-val { background-color: #eff6ff; color: #1e3a8a; font-weight: bold; font-size: 14pt; text-align: center; border: 1px solid #93c5fd; }
-
-                .black-head { background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #1e293b; }
-                .black-item { background-color: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; padding: 4px 8px; }
-
-                .red-head { background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #b91c1c; }
-                .red-val { background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 13pt; text-align: center; border: 1px solid #fca5a5; }
-                .red-agent { background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; border: 1px solid #fca5a5; }
-
-                .green-head { background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #15803d; }
-                .green-val { background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 13pt; text-align: center; border: 1px solid #86efac; }
-                .green-agent { background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; border: 1px solid #86efac; }
-            </style>
-        </head>
+        <head><meta charset="UTF-8"></head>
         <body>
-        <table>
+        <table style="border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 11pt;">
             <colgroup>
-                <col width="45"><col width="105"><col width="175"><col width="120">
+                <col width="45"><col width="105"><col width="175"><col width="125">
                 <col width="25"><col width="25">
-                <col width="135"><col width="180"><col width="55"><col width="165"><col width="165">
+                <col width="140"><col width="185"><col width="55"><col width="180"><col width="180">
             </colgroup>
             <tbody>
     `;
@@ -456,50 +431,81 @@ function exporterExcel() {
     for (let r = 0; r < totalGridRows; r++) {
         tableHtml += `<tr>`;
 
-        // Ankavia (A -> D)
+        // Ankavia : Tabilao isaky ny Agent (A -> D)
         const leftItem = leftRows[r];
         if (!leftItem || leftItem.type === "spacer") {
-            tableHtml += `<td colspan="4" class="no-border" style="height: 12px;"></td>`;
+            tableHtml += `<td colspan="4" style="height: 14px;"></td>`;
         } else if (leftItem.type === "agent-header") {
-            tableHtml += `<td colspan="4" class="agent-header cell">${leftItem.text}</td>`;
+            tableHtml += `<td colspan="4" style="background-color: #1f4e78; color: #ffffff; font-weight: bold; text-align: left; padding: 6px 8px; ${bdr}">${leftItem.text}</td>`;
         } else if (leftItem.type === "col-header") {
-            tableHtml += `<td class="col-header cell">N°</td><td class="col-header cell">Date Saisie</td><td class="col-header cell">Référence</td><td class="col-header cell">Famille</td>`;
+            tableHtml += `
+                <td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; padding: 5px; ${bdr}">N°</td>
+                <td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; padding: 5px; ${bdr}">Date Saisie</td>
+                <td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; padding: 5px; ${bdr}">Référence</td>
+                <td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; padding: 5px; ${bdr}">Famille</td>
+            `;
         } else if (leftItem.type === "data") {
-            const bg = leftItem.odd ? "row-odd" : "row-even";
-            tableHtml += `<td class="cell ${bg}" style="text-align: center;">${leftItem.index}</td><td class="cell ${bg}" style="text-align: center;">${leftItem.date}</td><td class="cell ${bg}"><strong>${leftItem.ref}</strong></td><td class="cell ${bg}">${leftItem.famille}</td>`;
+            const bg = leftItem.odd ? "#f8fafc" : "#ffffff";
+            tableHtml += `
+                <td style="background-color: ${bg}; text-align: center; padding: 5px; ${bdr}">${leftItem.index}</td>
+                <td style="background-color: ${bg}; text-align: center; padding: 5px; ${bdr}">${leftItem.date}</td>
+                <td style="background-color: ${bg}; font-weight: bold; padding: 5px 8px; ${bdr}">${leftItem.ref}</td>
+                <td style="background-color: ${bg}; padding: 5px 8px; ${bdr}">${leftItem.famille}</td>
+            `;
         } else if (leftItem.type === "total") {
-            tableHtml += `<td colspan="3" class="total-row cell" style="text-align: right;">TOTAL RÉFÉRENCES (${leftItem.agent}) :</td><td class="total-row cell" style="text-align: center;">${leftItem.count}</td>`;
+            tableHtml += `
+                <td colspan="3" style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; text-align: right; padding: 5px 8px; ${bdr}">TOTAL RÉFÉRENCES (${leftItem.agent}) :</td>
+                <td style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; text-align: center; padding: 5px; ${bdr}">${leftItem.count}</td>
+            `;
         }
 
         // Elanelana (E sy F)
-        tableHtml += `<td colspan="2" class="no-border"></td>`;
+        tableHtml += `<td colspan="2"></td>`;
 
-        // Faritra Manga (G)
-        if (r === 0) tableHtml += `<td class="blue-head cell">TOTAL GÉNÉRAL</td>`;
-        else if (r === 1) tableHtml += `<td class="blue-val cell">${totalGeneral}</td>`;
-        else tableHtml += `<td class="no-border"></td>`;
-
-        // Faritra Mainty (H sy I)
+        // Faritra Manga (G) : Total Général
         if (r === 0) {
-            tableHtml += `<td colspan="2" class="black-head cell">AGENTS ACTIFS (${agentsTries.length})</td>`;
-        } else if (r <= agentsTries.length) {
-            const ag = agentsTries[r - 1];
-            tableHtml += `<td class="black-item">${ag}</td><td class="black-item" style="text-align: center; font-weight: bold;">${groupesParAgent[ag].length}</td>`;
+            tableHtml += `<td style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">TOTAL GÉNÉRAL</td>`;
+        } else if (r === 1) {
+            tableHtml += `<td style="background-color: #eff6ff; color: #1e3a8a; font-weight: bold; font-size: 14pt; text-align: center; padding: 8px; ${bdr}">${totalGeneral}</td>`;
         } else {
-            tableHtml += `<td colspan="2" class="no-border"></td>`;
+            tableHtml += `<td></td>`;
         }
 
-        // Faritra Mena (J)
-        if (r === 0) tableHtml += `<td class="red-head cell">MIN RÉFÉRENCE</td>`;
-        else if (r === 1) tableHtml += `<td class="red-val cell">${minCount}</td>`;
-        else if (r === 2) tableHtml += `<td class="red-agent cell">${minAgentText}</td>`;
-        else tableHtml += `<td class="no-border"></td>`;
+        // Faritra Mainty (H sy I) : Lisitry ny Agent
+        if (r === 0) {
+            tableHtml += `<td colspan="2" style="background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">AGENTS ACTIFS (${agentsTries.length})</td>`;
+        } else if (r <= agentsTries.length) {
+            const ag = agentsTries[r - 1];
+            const rowBg = (r % 2 === 0) ? "#f8fafc" : "#ffffff";
+            tableHtml += `
+                <td style="background-color: ${rowBg}; color: #0f172a; padding: 4px 8px; ${bdr}">${ag}</td>
+                <td style="background-color: ${rowBg}; color: #0f172a; font-weight: bold; text-align: center; padding: 4px; ${bdr}">${groupesParAgent[ag].length}</td>
+            `;
+        } else {
+            tableHtml += `<td colspan="2"></td>`;
+        }
 
-        // Faritra Maitso (K)
-        if (r === 0) tableHtml += `<td class="green-head cell">MAX RÉFÉRENCE</td>`;
-        else if (r === 1) tableHtml += `<td class="green-val cell">${maxCount}</td>`;
-        else if (r === 2) tableHtml += `<td class="green-agent cell">${maxAgentText}</td>`;
-        else tableHtml += `<td class="no-border"></td>`;
+        // Faritra Mena (J) : Minimum Référence + Agent
+        if (r === 0) {
+            tableHtml += `<td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">MIN RÉFÉRENCE</td>`;
+        } else if (r === 1) {
+            tableHtml += `<td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 13pt; text-align: center; padding: 6px; ${bdr}">${minCount}</td>`;
+        } else if (r === 2) {
+            tableHtml += `<td style="background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; padding: 5px; ${bdr}">${minAgentText}</td>`;
+        } else {
+            tableHtml += `<td></td>`;
+        }
+
+        // Faritra Maitso (K) : Maximum Référence + Agent
+        if (r === 0) {
+            tableHtml += `<td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">MAX RÉFÉRENCE</td>`;
+        } else if (r === 1) {
+            tableHtml += `<td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 13pt; text-align: center; padding: 6px; ${bdr}">${maxCount}</td>`;
+        } else if (r === 2) {
+            tableHtml += `<td style="background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; padding: 5px; ${bdr}">${maxAgentText}</td>`;
+        } else {
+            tableHtml += `<td></td>`;
+        }
 
         tableHtml += `</tr>`;
     }
