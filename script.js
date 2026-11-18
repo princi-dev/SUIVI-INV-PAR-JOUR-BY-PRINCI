@@ -472,8 +472,37 @@ function exporterExcel() {
       // 5. Fanamboarana ny takelaka Excel (Mitovy haavo tsara daholo ny lignes rehetra)
             let tableHtml = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">
-        <head><meta charset="UTF-8"></head>
+        <head>
+            <meta charset="UTF-8">
+            <!--[if gte mso 9]>
+            <xml>
+                <x:ExcelWorkbook>
+                    <x:ExcelWorksheets>
+                        <x:ExcelWorksheet>
+                            <x:Name>Suivi Saisie</x:Name>
+                            <x:WorksheetOptions>
+                                <x:DisplayGridlines/>
+                            </x:WorksheetOptions>
+                        </x:ExcelWorksheet>
+                    </x:ExcelWorksheets>
+                </x:ExcelWorkbook>
+            </xml>
+            <![endif]-->
+            <style>
+                .col-hidden { mso-width-source: userset; mso-width-alt: 0; width: 0pt; display: none; }
+            </style>
+        </head>
         <body>
+        <table style="border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 11pt;">
+            <colgroup>
+                <col width="45"><col width="105"><col width="175"><col width="125">
+                <col width="25"><col width="25"><col width="25">
+                <col width="185"><col width="55"><col width="190"><col width="190">
+                <col width="25">
+                <col span="16372" class="col-hidden" style="display:none; width:0px;">
+            </colgroup>
+            <tbody>
+
     `;
 
     const cellPad = "padding: 3px 8px; vertical-align: middle;";
