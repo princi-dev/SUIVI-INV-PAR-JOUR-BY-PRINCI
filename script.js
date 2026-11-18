@@ -69,6 +69,7 @@ function mettreAJourAiguille(count) {
 // Maneho na manafina ny tabilao DETAILS
 function toggleDetails() {
     const tableContainer = document.getElementById("tableContainer");
+    const logoPlaceholder = document.getElementById("logoPlaceholder");
     const btnDetails = document.getElementById("btnToggleDetails");
 
     if (currentFilteredList.length === 0) {
@@ -80,9 +81,11 @@ function toggleDetails() {
 
     if (isDetailsVisible) {
         tableContainer.style.display = "block";
+        if (logoPlaceholder) logoPlaceholder.style.display = "none";
         btnDetails.textContent = "MOINS";
     } else {
         tableContainer.style.display = "none";
+        if (logoPlaceholder) logoPlaceholder.style.display = "flex";
         btnDetails.textContent = "DETAILS";
     }
 }
@@ -282,8 +285,7 @@ function appliquerFiltres() {
             }
         }
     });
-
-    const uniqueRefsList = Object.keys(refMap);
+   const uniqueRefsList = Object.keys(refMap);
     const totalCount = uniqueRefsList.length;
 
     let countTissu = 0;
@@ -408,5 +410,5 @@ window.addEventListener("DOMContentLoaded", () => {
     dessinerGraduationsCompteur();
     initDateInput();
     chargerDonnees();
-    setInterval(chargerDonnees, 60000);
+    setInterval(chargerDonnees, 15000);
 });
