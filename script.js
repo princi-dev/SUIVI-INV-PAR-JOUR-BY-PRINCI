@@ -345,6 +345,7 @@ function appliquerFiltres() {
 
 // Fiasa mamadika ny angona voasivana ho rakitra Excel (Entête = Agent, Corps = Références)
 // Fiasa mamadika ny angona voasivana ho rakitra Excel (Loko mirindra + Synthèse + Tie-breaker ELEMENT)
+// Fiasa mamadika ny angona voasivana ho rakitra Excel (Loko mirindra + Synthèse + Tie-breaker ELEMENT)
 function exporterExcel() {
     if (currentFilteredList.length === 0) {
         alert("Tsy misy angona haondrana ho Excel amin'io daty na Agent io.");
