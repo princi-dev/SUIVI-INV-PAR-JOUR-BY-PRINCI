@@ -469,7 +469,7 @@ function exporterExcel() {
     const totalGridRows = Math.max(leftRows.length, agentsIndividuelsTries.length + 4);
     const finalGridRows = Math.max(totalGridRows, 7);
     const bdr = "border: 1px solid #94a3b8;";
-    // 5. Fanamboarana ny takelaka Excel
+      // 5. Fanamboarana ny takelaka Excel (Mitovy haavo tsara daholo ny lignes rehetra)
     let tableHtml = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">
         <head><meta charset="UTF-8"></head>
@@ -483,34 +483,37 @@ function exporterExcel() {
             <tbody>
     `;
 
+    const cellPad = "padding: 3px 8px; vertical-align: middle;";
+
     for (let r = 0; r < finalGridRows; r++) {
-        tableHtml += `<tr>`;
+        // Apetraka ho 24px mitovy daholo ny haavon'ny andalana tsirairay
+        tableHtml += `<tr style="height: 24px;">`;
 
         // 1. Ankavia : Tabilao isaky ny Agent (A -> D)
         const leftItem = leftRows[r];
         if (!leftItem || leftItem.type === "spacer") {
-            tableHtml += `<td colspan="4" style="height: 14px;"></td>`;
+            tableHtml += `<td colspan="4" style="${cellPad}"></td>`;
         } else if (leftItem.type === "agent-header") {
-            tableHtml += `<td colspan="4" style="background-color: #1f4e78; color: #ffffff; font-weight: bold; text-align: left; padding: 6px 8px; ${bdr}">${leftItem.text}</td>`;
+            tableHtml += `<td colspan="4" style="background-color: #1f4e78; color: #ffffff; font-weight: bold; text-align: left; ${cellPad} ${bdr}">${leftItem.text}</td>`;
         } else if (leftItem.type === "col-header") {
             tableHtml += `
-                <td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; padding: 5px; ${bdr}">N°</td>
-                <td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; padding: 5px; ${bdr}">Date Saisie</td>
-                <td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; padding: 5px; ${bdr}">Référence</td>
-                <td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; padding: 5px; ${bdr}">Famille</td>
+                <td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">N°</td>
+                <td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">Date Saisie</td>
+                <td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">Référence</td>
+                <td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">Famille</td>
             `;
         } else if (leftItem.type === "data") {
             const bg = leftItem.odd ? "#f8fafc" : "#ffffff";
             tableHtml += `
-                <td style="background-color: ${bg}; text-align: center; padding: 5px; ${bdr}">${leftItem.index}</td>
-                <td style="background-color: ${bg}; text-align: center; padding: 5px; ${bdr}">${leftItem.date}</td>
-                <td style="background-color: ${bg}; font-weight: bold; padding: 5px 8px; ${bdr}">${leftItem.ref}</td>
-                <td style="background-color: ${bg}; padding: 5px 8px; ${bdr}">${leftItem.famille}</td>
+                <td style="background-color: ${bg}; text-align: center; ${cellPad} ${bdr}">${leftItem.index}</td>
+                <td style="background-color: ${bg}; text-align: center; ${cellPad} ${bdr}">${leftItem.date}</td>
+                <td style="background-color: ${bg}; font-weight: bold; ${cellPad} ${bdr}">${leftItem.ref}</td>
+                <td style="background-color: ${bg}; ${cellPad} ${bdr}">${leftItem.famille}</td>
             `;
         } else if (leftItem.type === "total") {
             tableHtml += `
-                <td colspan="3" style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; text-align: right; padding: 5px 8px; ${bdr}">TOTAL RÉFÉRENCES (${leftItem.agent}) :</td>
-                <td style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; text-align: center; padding: 5px; ${bdr}">${leftItem.count}</td>
+                <td colspan="3" style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; text-align: right; ${cellPad} ${bdr}">TOTAL RÉFÉRENCES (${leftItem.agent}) :</td>
+                <td style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${leftItem.count}</td>
             `;
         }
 
@@ -519,38 +522,38 @@ function exporterExcel() {
 
         // 3. Faritra Mainty (H sy I) : Lisitry ny Agent tokana tsy misy doublon
         if (r === 0) {
-            tableHtml += `<td colspan="2" style="background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">AGENTS ACTIFS (${agentsIndividuelsTries.length})</td>`;
+            tableHtml += `<td colspan="2" style="background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">AGENTS ACTIFS (${agentsIndividuelsTries.length})</td>`;
         } else if (r <= agentsIndividuelsTries.length) {
             const agObj = agentsIndividuelsTries[r - 1];
             const rowBg = (r % 2 === 0) ? "#f8fafc" : "#ffffff";
             tableHtml += `
-                <td style="background-color: ${rowBg}; color: #0f172a; padding: 4px 8px; ${bdr}">${agObj.nomAffiche}</td>
-                <td style="background-color: ${rowBg}; color: #0f172a; font-weight: bold; text-align: center; padding: 4px; ${bdr}">${agObj.total}</td>
+                <td style="background-color: ${rowBg}; color: #0f172a; ${cellPad} ${bdr}">${agObj.nomAffiche}</td>
+                <td style="background-color: ${rowBg}; color: #0f172a; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${agObj.total}</td>
             `;
         } else {
             tableHtml += `<td colspan="2"></td>`;
         }
 
-        // 4. Faritra Ankavanana (J sy K) : MIN, MAX, ary TOTAL GÉNÉRAL mivelatra eo ambany
+        // 4. Faritra Ankavanana (J sy K) : MIN, MAX, ary TOTAL GÉNÉRAL
         if (r === 0) {
             tableHtml += `
-                <td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">MIN RÉFÉRENCE</td>
-                <td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">MAX RÉFÉRENCE</td>
+                <td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MIN RÉFÉRENCE</td>
+                <td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MAX RÉFÉRENCE</td>
             `;
         } else if (r === 1) {
             tableHtml += `
-                <td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 13pt; text-align: center; padding: 6px; ${bdr}">${minCount}</td>
-                <td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 13pt; text-align: center; padding: 6px; ${bdr}">${maxCount}</td>
+                <td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${minCount}</td>
+                <td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${maxCount}</td>
             `;
         } else if (r === 2) {
             tableHtml += `
-                <td style="background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; padding: 5px; ${bdr}">${minAgentText}</td>
-                <td style="background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; padding: 5px; ${bdr}">${maxAgentText}</td>
+                <td style="background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${minAgentText}</td>
+                <td style="background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${maxAgentText}</td>
             `;
         } else if (r === 4) {
-            tableHtml += `<td colspan="2" style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; padding: 7px; ${bdr}">TOTAL GÉNÉRAL RÉFÉRENCES</td>`;
+            tableHtml += `<td colspan="2" style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL GÉNÉRAL RÉFÉRENCES</td>`;
         } else if (r === 5) {
-            tableHtml += `<td colspan="2" style="background-color: #eff6ff; color: #1e3a8a; font-weight: bold; font-size: 16pt; text-align: center; padding: 10px; ${bdr}">${totalGeneral}</td>`;
+            tableHtml += `<td colspan="2" style="background-color: #eff6ff; color: #1e3a8a; font-weight: bold; font-size: 14pt; text-align: center; ${cellPad} ${bdr}">${totalGeneral}</td>`;
         } else {
             tableHtml += `<td colspan="2"></td>`;
         }
