@@ -330,7 +330,19 @@ tr:hover {
         border: 1px solid #999;
     }
 }
-/* Fanovana ny lokon'ny soratra "Daty :" sy "Agent :" */
-.filter-box label {
-    color: #1a73e8 !important; /* Soloy amin'izay loko tianao (ohatra: manga #1a73e8) */
+/* Endriky ny logo eo amin'ny ilany ankavanana rehefa miafina ny DETAILS */
+.logo-placeholder {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    margin-top: 20px;
+}
+
+.logo-placeholder img {
+    max-width: 70%;
+    max-height: 280px;
+    object-fit: contain;
+    opacity: 0.92;
 }
