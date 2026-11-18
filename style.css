@@ -221,6 +221,26 @@ h2 {
     background-color: #5f6368;
 }
 
+/* Logo 13501 miseho eo afovoany rehefa miafina ny DETAILS */
+.logo-placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    margin-top: 20px;
+}
+
+.logo-placeholder img {
+    max-width: 75%;
+    max-height: 300px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    opacity: 0.95;
+}
+
 /* Tabilao DETAILS eo ambanin'ny bokotra */
 .table-container {
     margin-top: 20px;
@@ -319,6 +339,9 @@ tr:hover {
     .no-print {
         display: none !important;
     }
+    .logo-placeholder {
+        display: none !important;
+    }
     .speedometer-wrapper {
         background: #1e2229 !important;
         -webkit-print-color-adjust: exact;
@@ -329,19 +352,4 @@ tr:hover {
         overflow: visible;
         border: 1px solid #999;
     }
-}
-.logo-placeholder {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 24px;
-    margin-top: 20px;
-}
-
-.logo-placeholder img {
-    max-width: 70%;
-    max-height: 280px;
-    object-fit: contain;
-    opacity: 0.92;
 }
