@@ -330,19 +330,14 @@ tr:hover {
         border: 1px solid #999;
     }
 }
-/* Endriky ny logo eo amin'ny ilany ankavanana rehefa miafina ny DETAILS */
 .logo-placeholder {
-    flex: 1;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 24px;
-    margin-top: 20px;
+    flex-direction: column; /* Mampilahatra azy ambony sy ambany */
+    align-items: center;    /* Mampifanitsy azy eo afovoany */
+    gap: 15px;              /* Elanelana eo amin'ny sary roa */
 }
 
 .logo-placeholder img {
-    max-width: 70%;
-    max-height: 280px;
-    object-fit: contain;
-    opacity: 0.92;
+    max-width: 150px;       /* Azonao ovaina araka ny habe tianao */
+    height: auto;
 }
