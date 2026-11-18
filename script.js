@@ -163,8 +163,8 @@ async function chargerDonnees() {
     const statusEl = document.getElementById("statusMsg");
     statusEl.textContent = "ACTUALISATION ENCOURS...";
 
-    // C = REFERENCE (0), K = AGENT (1), P = DATE DE SAISI (2), L = FAMILLE (3)
-    const query = encodeURIComponent("SELECT C, K, P, L WHERE C IS NOT NULL AND P IS NOT NULL");
+    // C = REFERENCE (0), K = AGENT (1), P = DATE DE SAISI (2), L = FAMILLE (3), G = ELEMENT (4)
+    const query = encodeURIComponent("SELECT C, K, P, L, G WHERE C IS NOT NULL AND P IS NOT NULL");
     const host = "docs." + "google.com";
     const url = `https://${host}/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}&tq=${query}`;
 
@@ -346,6 +346,7 @@ function appliquerFiltres() {
 // Fiasa mamadika ny angona voasivana ho rakitra Excel (Entête = Agent, Corps = Références)
 // Fiasa mamadika ny angona voasivana ho rakitra Excel (Loko mirindra + Synthèse + Tie-breaker ELEMENT)
 // Fiasa mamadika ny angona voasivana ho rakitra Excel (Loko mirindra + Synthèse + Tie-breaker ELEMENT)
+// Fiasa mamadika ny angona voasivana ho rakitra Excel (Loko mirindra + Synthèse + Tie-breaker ELEMENT)
 function exporterExcel() {
     if (currentFilteredList.length === 0) {
         alert("Tsy misy angona haondrana ho Excel amin'io daty na Agent io.");
@@ -353,10 +354,39 @@ function exporterExcel() {
     }
 
     const selectedIsoDate = document.getElementById("dateFilter").value;
+    const targetDateStr = formatInputDateToSheetFormat(selectedIsoDate);
     const selectedAgent = document.getElementById("agentFilter").value;
     const agentSuffix = selectedAgent === "ALL" ? "Tous" : selectedAgent.replace(/\s+/g, "_").replace(/\//g, "-");
 
-    // 1. Manambatra ny références isaky ny Agent
+    // 1. Manisa mivantana ny isan'ny ELEMENT vitan'ny agent tsirairay avy amin'ny allRowsData
+    const binomeLookup = construireMappingBinomes(targetDateStr);
+    const localElementsCount = {};
+
+    allRowsData.forEach(row => {
+        const refCell = row.c.at(0);     // C : REFERENCE
+        const agentCell = row.c.at(1);   // K : AGENT
+        const dateCell = row.c.at(2);    // P : DATE DE SAISI
+        const elementCell = row.c.at(4); // G : ELEMENT
+
+        if (refCell && refCell.v && dateCell) {
+            const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "Tsy voalaza";
+            const rawElement = (elementCell && elementCell.v) ? String(elementCell.v).trim() : "";
+            const dateOnly = extractDateOnly(dateCell);
+
+            if (rawAgent.toUpperCase() === "ORLI") return;
+
+            const finalAgent = normaliserAgent(rawAgent, binomeLookup);
+            const matchDate = (dateOnly === targetDateStr);
+            const matchAgent = (selectedAgent === "ALL" || finalAgent === selectedAgent);
+
+            if (matchDate && matchAgent) {
+                if (!localElementsCount[finalAgent]) localElementsCount[finalAgent] = 0;
+                if (rawElement !== "") localElementsCount[finalAgent] += 1;
+            }
+        }
+    });
+
+    // 2. Manambatra ny références isaky ny Agent
     const groupesParAgent = {};
     currentFilteredList.forEach(item => {
         const agentName = item["Agent"] || "Tsy voalaza";
@@ -372,7 +402,7 @@ function exporterExcel() {
 
     const agentsTries = Object.keys(groupesParAgent).sort();
 
-    // 2. Kajy MIN sy MAX (Raha mitovy ny Référence, dia jerena ny ELEMENT)
+    // 3. Kajy MIN sy MAX (Raha mitovy ny Référence, dia jerena ny ELEMENT)
     const totalGeneral = currentFilteredList.length;
     let minCount = Infinity;
     let minElem = Infinity;
@@ -384,7 +414,7 @@ function exporterExcel() {
 
     agentsTries.forEach(agent => {
         const refCount = groupesParAgent[agent].length;
-        const elemCount = agentElementsCount[agent] || 0;
+        const elemCount = localElementsCount[agent] || 0;
 
         if (refCount < minCount || (refCount === minCount && elemCount < minElem)) {
             minCount = refCount;
@@ -406,7 +436,7 @@ function exporterExcel() {
     const minAgentText = `${minAgents.join(", ")} (${minElem} élém.)`;
     const maxAgentText = `${maxAgents.join(", ")} (${maxElem} élém.)`;
 
-    // 3. Fanomanana ny andalana eo amin'ny ankavia (A -> D)
+    // 4. Fanomanana ny andalana eo amin'ny ankavia (A -> D)
     const leftRows = [];
     agentsTries.forEach(agent => {
         const liste = groupesParAgent[agent];
