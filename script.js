@@ -487,7 +487,10 @@ function exporterExcel() {
 
     for (let r = 0; r < finalGridRows; r++) {
         // Apetraka ho 24px mitovy daholo ny haavon'ny andalana tsirairay
-        tableHtml += `<tr style="height: 24px;">`;
+                // Ligne 3 (r === 2) dia atao 36px, ny ambiny mijanona 24px
+        const rowHeight = (r === 2) ? "36px" : "24px";
+        tableHtml += `<tr style="height: ${rowHeight};">`;
+
 
         // 1. Ankavia : Tabilao isaky ny Agent (A -> D)
         const leftItem = leftRows[r];
