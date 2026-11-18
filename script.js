@@ -343,7 +343,7 @@ function appliquerFiltres() {
     }
 }
 
-// Fiasa mamadika ny angona voasivana ho rakitra Excel (Loko mirindra + Synthèse + Tie-breaker ELEMENT)
+// Fiasa mamadika ny angona voasivana ho rakitra Excel (AGENTS ACTIFS voasaraka sy tsy misy doublon)
 function exporterExcel() {
     if (currentFilteredList.length === 0) {
         alert("Tsy misy angona haondrana ho Excel amin'io daty na Agent io.");
@@ -355,7 +355,7 @@ function exporterExcel() {
     const selectedAgent = document.getElementById("agentFilter").value;
     const agentSuffix = selectedAgent === "ALL" ? "Tous" : selectedAgent.replace(/\s+/g, "_").replace(/\//g, "-");
 
-    // 1. Manisa mivantana ny isan'ny ELEMENT vitan'ny agent tsirairay avy amin'ny allRowsData
+    // 1. Manisa mivantana ny isan'ny ELEMENT vitan'ny agent/binôme tsirairay avy amin'ny allRowsData
     const binomeLookup = construireMappingBinomes(targetDateStr);
     const localElementsCount = {};
 
@@ -383,21 +383,41 @@ function exporterExcel() {
         }
     });
 
-    // 2. Manambatra ny références isaky ny Agent
+    // 2. Manambatra ny références isaky ny groupe (ankavia A -> D) sy isaky ny agent tokana (ankavanana H -> I)
     const groupesParAgent = {};
+    const agentsIndividuelsMap = {}; // Mitahiry ny anarana tokana tsy misy doublon sy ny totaliny
+
     currentFilteredList.forEach(item => {
-        const agentName = item["Agent"] || "Tsy voalaza";
-        if (!groupesParAgent[agentName]) {
-            groupesParAgent[agentName] = [];
+        const agentGroupe = item["Agent"] || "Tsy voalaza";
+        if (!groupesParAgent[agentGroupe]) {
+            groupesParAgent[agentGroupe] = [];
         }
-        groupesParAgent[agentName].push({
+        groupesParAgent[agentGroupe].push({
             date: item["Date Saisie"],
             ref: item["Référence"],
             famille: item["Famille"]
         });
+
+        // Manasaraka ny "/" sy "," mba hahazoana ny anarana tokana tsirairay (tsy misy doublon)
+        const nomsSepares = agentGroupe.split(/[\/,]/).map(n => n.trim()).filter(n => n !== "");
+        const dejaComptePourCetteRef = new Set();
+
+        nomsSepares.forEach(nom => {
+            const cle = nom.toUpperCase();
+            if (!dejaComptePourCetteRef.has(cle)) {
+                dejaComptePourCetteRef.add(cle);
+                if (!agentsIndividuelsMap[cle]) {
+                    agentsIndividuelsMap[cle] = { nomAffiche: nom, total: 0 };
+                }
+                agentsIndividuelsMap[cle].total += 1;
+            }
+        });
     });
 
     const agentsTries = Object.keys(groupesParAgent).sort();
+    const agentsIndividuelsTries = Object.values(agentsIndividuelsMap).sort((a, b) =>
+        a.nomAffiche.localeCompare(b.nomAffiche, 'fr', { sensitivity: 'base' })
+    );
 
     // 3. Kajy MIN sy MAX (Raha mitovy ny Référence, dia jerena ny ELEMENT)
     const totalGeneral = currentFilteredList.length;
@@ -446,10 +466,10 @@ function exporterExcel() {
         leftRows.push({ type: "spacer" });
     });
 
-    const totalGridRows = Math.max(leftRows.length, agentsTries.length + 4);
+    const totalGridRows = Math.max(leftRows.length, agentsIndividuelsTries.length + 4);
     const finalGridRows = Math.max(totalGridRows, 7);
     const bdr = "border: 1px solid #94a3b8;";
-    // 5. Fanamboarana ny takelaka Excel (TOTAL GÉNÉRAL mivelatra eo ambany)
+    // 5. Fanamboarana ny takelaka Excel
     let tableHtml = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">
         <head><meta charset="UTF-8"></head>
@@ -497,15 +517,15 @@ function exporterExcel() {
         // 2. Elanelana (E, F, G)
         tableHtml += `<td colspan="3"></td>`;
 
-        // 3. Faritra Mainty (H sy I) : Lisitry ny Agent
+        // 3. Faritra Mainty (H sy I) : Lisitry ny Agent tokana tsy misy doublon
         if (r === 0) {
-            tableHtml += `<td colspan="2" style="background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">AGENTS ACTIFS (${agentsTries.length})</td>`;
-        } else if (r <= agentsTries.length) {
-            const ag = agentsTries[r - 1];
+            tableHtml += `<td colspan="2" style="background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; ${bdr}">AGENTS ACTIFS (${agentsIndividuelsTries.length})</td>`;
+        } else if (r <= agentsIndividuelsTries.length) {
+            const agObj = agentsIndividuelsTries[r - 1];
             const rowBg = (r % 2 === 0) ? "#f8fafc" : "#ffffff";
             tableHtml += `
-                <td style="background-color: ${rowBg}; color: #0f172a; padding: 4px 8px; ${bdr}">${ag}</td>
-                <td style="background-color: ${rowBg}; color: #0f172a; font-weight: bold; text-align: center; padding: 4px; ${bdr}">${groupesParAgent[ag].length}</td>
+                <td style="background-color: ${rowBg}; color: #0f172a; padding: 4px 8px; ${bdr}">${agObj.nomAffiche}</td>
+                <td style="background-color: ${rowBg}; color: #0f172a; font-weight: bold; text-align: center; padding: 4px; ${bdr}">${agObj.total}</td>
             `;
         } else {
             tableHtml += `<td colspan="2"></td>`;
