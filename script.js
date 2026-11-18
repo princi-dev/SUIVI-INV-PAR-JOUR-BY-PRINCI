@@ -343,7 +343,7 @@ function appliquerFiltres() {
     }
 }
 
-// Fiasa mamadika ny angona voasivana ho rakitra Excel (.xlsx na .xls raha tsy tafiditra ny CDN)
+// Fiasa mamadika ny angona voasivana ho rakitra Excel (Entête = Agent, Corps = Références)
 function exporterExcel() {
     if (currentFilteredList.length === 0) {
         alert("Tsy misy angona haondrana ho Excel amin'io daty na Agent io.");
@@ -354,44 +354,100 @@ function exporterExcel() {
     const selectedAgent = document.getElementById("agentFilter").value;
     const agentSuffix = selectedAgent === "ALL" ? "Tous" : selectedAgent.replace(/\s+/g, "_").replace(/\//g, "-");
 
+    // 1. Manambatra ny références isaky ny Agent
+    const groupesParAgent = {};
+    currentFilteredList.forEach(item => {
+        const agentName = item["Agent"] || "Tsy voalaza";
+        if (!groupesParAgent[agentName]) {
+            groupesParAgent[agentName] = [];
+        }
+        groupesParAgent[agentName].push({
+            date: item["Date Saisie"],
+            ref: item["Référence"],
+            famille: item["Famille"]
+        });
+    });
+
+    const agentsTries = Object.keys(groupesParAgent).sort();
+
+    // 2. Raha tafiditra tsara ny librairie SheetJS (XLSX)
     if (typeof XLSX !== "undefined") {
-        const worksheet = XLSX.utils.json_to_sheet(currentFilteredList);
+        const aoaData = [];
+
+        agentsTries.forEach(agent => {
+            const liste = groupesParAgent[agent];
+
+            // ENTÊTE : Anaran'ny Agent
+            aoaData.push([`AGENT : ${agent} (${liste.length} réf.)`]);
+            aoaData.push(["N°", "Date Saisie", "Référence", "Famille"]);
+
+            // CORPS : Ny références vitany
+            liste.forEach((row, index) => {
+                aoaData.push([index + 1, row.date, row.ref, row.famille]);
+            });
+
+            // Andalana banga manasaraka ny agent manaraka
+            aoaData.push([]);
+        });
+
+        const worksheet = XLSX.utils.aoa_to_sheet(aoaData);
+        worksheet["!cols"] = [
+            { wch: 8 },  // N°
+            { wch: 15 }, // Date Saisie
+            { wch: 25 }, // Référence
+            { wch: 18 }  // Famille
+        ];
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "References");
         XLSX.writeFile(workbook, `Suivi_Saisie_${selectedIsoDate}_${agentSuffix}.xlsx`);
         return;
     }
 
+    // 3. Raha tsy tafiditra ny CDN (Secours HTML ho lasa .xls)
     let tableHtml = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">
         <head><meta charset="UTF-8"></head>
         <body>
         <table border="1">
+    `;
+
+    agentsTries.forEach(agent => {
+        const liste = groupesParAgent[agent];
+
+        // ENTÊTE : Anaran'ny Agent (mitambatra colonnes 4)
+        tableHtml += `
             <thead>
+                <tr style="background-color: #0d47a1; color: white; font-weight: bold; font-size: 14px;">
+                    <th colspan="4" style="text-align: left; padding: 6px;">AGENT : ${agent} (${liste.length} réf.)</th>
+                </tr>
                 <tr style="background-color: #1a73e8; color: white; font-weight: bold;">
                     <th>N°</th>
                     <th>Date Saisie</th>
                     <th>Référence</th>
                     <th>Famille</th>
-                    <th>Agent</th>
                 </tr>
             </thead>
             <tbody>
-    `;
-
-    currentFilteredList.forEach(item => {
-        tableHtml += `
-            <tr>
-                <td>${item["N°"]}</td>
-                <td>${item["Date Saisie"]}</td>
-                <td>${item["Référence"]}</td>
-                <td>${item["Famille"]}</td>
-                <td>${item["Agent"]}</td>
-            </tr>
         `;
+
+        // CORPS : Ny références vitany
+        liste.forEach((row, index) => {
+            tableHtml += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${row.date}</td>
+                    <td>${row.ref}</td>
+                    <td>${row.famille}</td>
+                </tr>
+            `;
+        });
+
+        // Andalana banga manasaraka
+        tableHtml += `<tr><td colspan="4" style="border: none; height: 15px;"></td></tr></tbody>`;
     });
 
-    tableHtml += `</tbody></table></body></html>`;
+    tableHtml += `</table></body></html>`;
 
     const blob = new Blob(["\ufeff", tableHtml], { type: "application/vnd.ms-excel;charset=utf-8" });
     const url = URL.createObjectURL(blob);
