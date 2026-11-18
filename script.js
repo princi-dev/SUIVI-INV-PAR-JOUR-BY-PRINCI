@@ -345,6 +345,7 @@ function appliquerFiltres() {
 
 // Fiasa mamadika ny angona voasivana ho rakitra Excel (Entête = Agent, Corps = Références)
 // Fiasa mamadika ny angona voasivana ho rakitra Excel (Paozy madio sy mirindra)
+// Fiasa mamadika ny angona voasivana ho rakitra Excel (Entête = Agent, Corps = Références, Farany = Total)
 function exporterExcel() {
     if (currentFilteredList.length === 0) {
         alert("Tsy misy angona haondrana ho Excel amin'io daty na Agent io.");
@@ -379,13 +380,16 @@ function exporterExcel() {
             const liste = groupesParAgent[agent];
 
             // ENTÊTE : Anaran'ny Agent
-            aoaData.push([`AGENT : ${agent} (${liste.length} réf.)`]);
+            aoaData.push([`AGENT : ${agent}`]);
             aoaData.push(["N°", "Date Saisie", "Référence", "Famille"]);
 
             // CORPS : Ny références vitany
             liste.forEach((row, index) => {
                 aoaData.push([index + 1, row.date, row.ref, row.famille]);
             });
+
+            // FARANY AMBANY : Total ny référence vitan'ilay agent
+            aoaData.push(["", "", "TOTAL RÉFÉRENCES", liste.length]);
 
             // Andalana banga manasaraka
             aoaData.push([]);
@@ -405,7 +409,7 @@ function exporterExcel() {
         return;
     }
 
-    // 3. Secours HTML ho lasa .xls (Loko madio, mijanona eo amin'ny colonnes 4 ihany)
+    // 3. Secours HTML ho lasa .xls (Loko madio + Total eo amin'ny farany ambany)
     let tableHtml = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">
         <head>
@@ -417,7 +421,8 @@ function exporterExcel() {
                 .col-header { background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; }
                 .row-even { background-color: #ffffff; }
                 .row-odd { background-color: #f9fbfd; }
-                .spacer { border: none; height: 12px; background-color: #ffffff; }
+                .total-row { background-color: #e9edf4; color: #1f4e78; font-weight: bold; }
+                .spacer { border: none; height: 14px; background-color: #ffffff; }
             </style>
         </head>
         <body>
@@ -434,10 +439,10 @@ function exporterExcel() {
     agentsTries.forEach(agent => {
         const liste = groupesParAgent[agent];
 
-        // ENTÊTE : Anaran'ny Agent (Manga matroka madio, mijanona eo amin'ny colonnes 4 ihany)
+        // ENTÊTE : Anaran'ny Agent
         tableHtml += `
             <tr>
-                <td colspan="4" class="agent-header">AGENT : ${agent} (${liste.length} réf.)</td>
+                <td colspan="4" class="agent-header">AGENT : ${agent}</td>
             </tr>
             <tr>
                 <td class="col-header">N°</td>
@@ -447,7 +452,7 @@ function exporterExcel() {
             </tr>
         `;
 
-        // CORPS : Ny références vitany (mifandimby fotsy sy volomparasy tanora malefaka)
+        // CORPS : Ny références vitany
         liste.forEach((row, index) => {
             const rowClass = index % 2 === 0 ? "row-even" : "row-odd";
             tableHtml += `
@@ -459,6 +464,14 @@ function exporterExcel() {
                 </tr>
             `;
         });
+
+        // FARANY AMBANY : Total ny référence vitan'ilay agent
+        tableHtml += `
+            <tr class="total-row">
+                <td colspan="3" style="text-align: right;">TOTAL RÉFÉRENCES (${agent}) :</td>
+                <td style="text-align: center; font-size: 12pt;">${liste.length}</td>
+            </tr>
+        `;
 
         // Andalana banga manasaraka
         tableHtml += `<tr><td colspan="4" class="spacer"></td></tr>`;
