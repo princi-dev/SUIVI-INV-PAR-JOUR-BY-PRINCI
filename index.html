@@ -375,7 +375,7 @@
                     </g>
                 </svg>
 
-                <div class="counter-label" id="counterLabel">Référence Unique</div>
+                <div class="counter-label" id="counterLabel">vetivety</div>
             </div>
 
             <div class="status no-print" id="statusMsg">ACTUALISATION ENCOURS...</div>
@@ -759,7 +759,7 @@
 
             const agentText = selectedAgent === "ALL" ? "" : ` (${selectedAgent})`;
             const pageLabel = currentPage === 2 ? " [DATE RÉEL]" : "";
-            labelEl.textContent = `RÉF. NON DOUBLANT DU ${targetDateStr}${agentText}${pageLabel}`;
+            labelEl.textContent = `RÉF INVENTORIÉE du ${targetDateStr}${agentText}${pageLabel}`;
 
             currentFilteredList = uniqueRefsList.map((ref, idx) => ({
                 "N°": idx + 1,
