@@ -16,38 +16,7 @@
             padding: 16px;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: stretch;
-        }
-
-        .page-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 14px;
-        }
-
-        .tab-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            cursor: pointer;
-            background-color: #ffffff;
-            color: #5f6368;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-            transition: all 0.2s ease;
-        }
-
-        .tab-btn:hover {
-            background-color: #e8f0fe;
-            color: #1a73e8;
-        }
-
-        .tab-btn.active {
-            background-color: #1a73e8;
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
         }
 
         .main-dashboard {
@@ -55,8 +24,9 @@
             flex-direction: row;
             gap: 20px;
             width: 100%;
-            min-height: calc(100vh - 82px);
+            min-height: calc(100vh - 32px);
         }
+
         .left-panel {
             flex: 1.15;
             background: #ffffff;
@@ -183,6 +153,7 @@
         .accessoire-badge .famille-count {
             color: #5bf347;
         }
+
         .speedo-svg {
             width: 100%;
             max-width: 450px;
@@ -205,7 +176,6 @@
             margin-top: 8px;
             letter-spacing: 0.4px;
         }
-
         .actions-wrapper {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -251,6 +221,7 @@
             object-fit: contain;
             opacity: 0.95;
         }
+
         .table-container {
             margin-top: 20px;
             flex: 1;
@@ -307,7 +278,7 @@
             body { background-color: #fff; padding: 0; display: block; }
             .main-dashboard { display: block; }
             .left-panel, .right-panel { box-shadow: none; padding: 0; }
-            .no-print, .logo-placeholder, .page-tabs { display: none !important; }
+            .no-print, .logo-placeholder { display: none !important; }
             .speedometer-wrapper {
                 background: #1e2229 !important;
                 -webkit-print-color-adjust: exact;
@@ -318,14 +289,9 @@
     </style>
 </head>
 <body>
-    <div class="page-tabs no-print">
-        <button class="tab-btn active" id="tabPage1" onclick="changerPage(1)">PAR DATE DE SAISIE</button>
-        <button class="tab-btn" id="tabPage2" onclick="changerPage(2)">DATE RÉEL (DATE EO @FICHE)</button>
-    </div>
-
     <div class="main-dashboard">
         <div class="left-panel">
-            <h2 id="mainTitle">SUIVI INVENTAIRE PAR DATE DE SAISIE</h2>
+            <h2>SUIVI INVENTAIRE PAR JOUR</h2>
 
             <div class="filters-wrapper no-print">
                 <div class="filter-box">
@@ -351,7 +317,7 @@
                     <span class="famille-count" id="accessoireCount">0</span>
                 </div>
 
-                <svg class="speedo-svg" viewBox="0 0 340 250">
+                                <svg class="speedo-svg" viewBox="0 0 340 250">
                     <defs>
                         <linearGradient id="speedArcGrad" x1="0%" y1="100%" x2="100%" y2="0%">
                             <stop offset="0%" stop-color="#ff3d00" />
@@ -375,16 +341,18 @@
                     </g>
                 </svg>
 
-                <div class="counter-label" id="counterLabel">vetivety</div>
+
+                <div class="counter-label" id="counterLabel">Référence Unique</div>
             </div>
 
             <div class="status no-print" id="statusMsg">ACTUALISATION ENCOURS...</div>
         </div>
+
         <div class="right-panel">
             <div class="actions-wrapper no-print">
                 <button class="btn btn-details" id="btnToggleDetails" onclick="toggleDetails()">DETAILS</button>
                 <button class="btn btn-refresh" onclick="chargerDonnees()">ACTUALISER</button>
-                <button class="btn btn-excel" onclick="exporterExcel()">DETAILS/EVALUATION (Excel)</button>
+                <button class="btn btn-excel" onclick="exporterExcel()">TO EXCEL</button>
                 <button class="btn btn-print" onclick="window.print()">IMPRIMER</button>
             </div>
 
@@ -407,57 +375,15 @@
             </div>
         </div>
     </div>
-
     <script>
         const SHEET_ID = "19C4-g_MffI9NRb8hpYusR5vOeglJLsWssuc9ZB4KzBI";
         const SHEET_NAME = "SAISIE_INVENTAIRE";
         const MAX_SPEEDO = 200;
 
-        let currentPage = 1;
         let allRowsData = [];
         let currentFilteredList = [];
         let isDetailsVisible = false;
 
-        function changerPage(pageNum) {
-            if (currentPage === pageNum) return;
-            currentPage = pageNum;
-
-            document.getElementById("tabPage1").classList.toggle("active", pageNum === 1);
-            document.getElementById("tabPage2").classList.toggle("active", pageNum === 2);
-
-            const titleEl = document.getElementById("mainTitle");
-            if (titleEl) {
-                titleEl.textContent = pageNum === 1 ? "SUIVI INVENTAIRE PAR DATE DE SAISIE" : "SUIVI INVENTAIRE PAR DATE RÉEL (DATE EO @FICHE)";
-            }
-
-            isDetailsVisible = false;
-            const tableContainer = document.getElementById("tableContainer");
-            const logoPlaceholder = document.getElementById("logoPlaceholder");
-            const btnDetails = document.getElementById("btnToggleDetails");
-            if (tableContainer) tableContainer.style.display = "none";
-            if (logoPlaceholder) logoPlaceholder.style.display = "flex";
-            if (btnDetails) btnDetails.textContent = "DETAILS";
-
-            mettreAJourListeAgents("ALL");
-            appliquerFiltres();
-        }
-
-        function estLigneValidePourPage(row) {
-            const agentCell = row.c.at(1);
-            const typeColBCell = row.c.at(6);
-
-            const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim().toUpperCase() : "";
-            const typeColB = (typeColBCell && typeColBCell.v) ? String(typeColBCell.v).trim().toUpperCase() : "";
-
-            if (rawAgent === "ORLI" || typeColB === "ORLI") return false;
-            if (currentPage === 2 && typeColB !== "INV") return false;
-
-            return true;
-        }
-
-        function getActiveDateCell(row) {
-            return currentPage === 1 ? row.c.at(2) : row.c.at(5);
-        }
         function dessinerGraduationsCompteur() {
             const ticksGroup = document.getElementById("speedoTicks");
             if (!ticksGroup) return;
@@ -512,7 +438,6 @@
             const angle = -120 + (clampedValue / MAX_SPEEDO) * 240;
             needle.style.transform = `rotate(${angle}deg)`;
         }
-
         function toggleDetails() {
             const tableContainer = document.getElementById("tableContainer");
             const logoPlaceholder = document.getElementById("logoPlaceholder");
@@ -535,6 +460,7 @@
                 btnDetails.textContent = "DETAILS";
             }
         }
+
         function initDateInput() {
             const now = new Date();
             const yyyy = now.getFullYear();
@@ -569,17 +495,15 @@
         function construireMappingBinomes(targetDateStr) {
             const binomeLookup = {};
             allRowsData.forEach(row => {
-                if (!estLigneValidePourPage(row)) return;
-
                 const refCell = row.c.at(0);
                 const agentCell = row.c.at(1);
-                const dateCell = getActiveDateCell(row);
+                const dateCell = row.c.at(2);
 
                 if (refCell && refCell.v && dateCell) {
                     const dateOnly = extractDateOnly(dateCell);
                     if (dateOnly === targetDateStr) {
                         const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "";
-                        if (rawAgent !== "" && rawAgent.includes("/")) {
+                        if (rawAgent !== "" && rawAgent.toUpperCase() !== "ORLI" && rawAgent.includes("/")) {
                             const membres = rawAgent.split("/").map(m => m.trim()).filter(m => m !== "");
                             membres.forEach(membre => {
                                 const key = membre.toUpperCase();
@@ -601,7 +525,6 @@
             const key = clean.toUpperCase();
             return binomeLookup[key] ? binomeLookup[key] : clean;
         }
-
         function chargerDonnees() {
             const statusEl = document.getElementById("statusMsg");
             statusEl.textContent = "ACTUALISATION ENCOURS...";
@@ -609,7 +532,7 @@
             const oldScript = document.getElementById("googleSheetsJsonp");
             if (oldScript) oldScript.remove();
 
-            const query = encodeURIComponent("SELECT C, K, P, L, G, A, B WHERE C IS NOT NULL AND (P IS NOT NULL OR A IS NOT NULL)");
+            const query = encodeURIComponent("SELECT C, K, P, L, G WHERE C IS NOT NULL AND P IS NOT NULL");
             const host = "docs." + "google.com";
             const url = `https://${host}/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:traiterReponseSheets&sheet=${encodeURIComponent(SHEET_NAME)}&tq=${query}`;
 
@@ -640,6 +563,7 @@
                 statusEl.textContent = "ERREUR DE TRAITEMENT.";
             }
         }
+
         function onDateChange() {
             mettreAJourListeAgents("ALL");
             appliquerFiltres();
@@ -654,18 +578,18 @@
             const agentsSet = new Set();
 
             allRowsData.forEach(row => {
-                if (!estLigneValidePourPage(row)) return;
-
                 const refCell = row.c.at(0);
                 const agentCell = row.c.at(1);
-                const dateCell = getActiveDateCell(row);
+                const dateCell = row.c.at(2);
 
                 if (refCell && refCell.v && dateCell) {
                     const dateOnly = extractDateOnly(dateCell);
                     if (dateOnly === targetDateStr) {
                         const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "Tsy voalaza";
-                        const finalAgent = normaliserAgent(rawAgent, binomeLookup);
-                        agentsSet.add(finalAgent);
+                        if (rawAgent.toUpperCase() !== "ORLI") {
+                            const finalAgent = normaliserAgent(rawAgent, binomeLookup);
+                            agentsSet.add(finalAgent);
+                        }
                     }
                 }
             });
@@ -684,7 +608,6 @@
                 agentSelect.value = "ALL";
             }
         }
-
         function appliquerFiltres() {
             const countEl = document.getElementById("uniqueCount");
             const tissuEl = document.getElementById("tissuCount");
@@ -704,11 +627,9 @@
             const refMap = {};
 
             allRowsData.forEach(row => {
-                if (!estLigneValidePourPage(row)) return;
-
                 const refCell = row.c.at(0);
                 const agentCell = row.c.at(1);
-                const dateCell = getActiveDateCell(row);
+                const dateCell = row.c.at(2);
                 const familleCell = row.c.at(3);
 
                 if (refCell && refCell.v && dateCell) {
@@ -716,6 +637,8 @@
                     const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "Tsy voalaza";
                     const rawFamille = (familleCell && familleCell.v) ? String(familleCell.v).trim().toUpperCase() : "";
                     const dateOnly = extractDateOnly(dateCell);
+
+                    if (rawAgent.toUpperCase() === "ORLI") return;
 
                     const finalAgent = normaliserAgent(rawAgent, binomeLookup);
 
@@ -758,8 +681,7 @@
             mettreAJourAiguille(totalCount);
 
             const agentText = selectedAgent === "ALL" ? "" : ` (${selectedAgent})`;
-            const pageLabel = currentPage === 2 ? " [DATE RÉEL]" : "";
-            labelEl.textContent = `RÉF INVENTORIÉE du ${targetDateStr}${agentText}${pageLabel}`;
+            labelEl.textContent = `RÉF. NON DOUBLANT DU ${targetDateStr}${agentText}`;
 
             currentFilteredList = uniqueRefsList.map((ref, idx) => ({
                 "N°": idx + 1,
@@ -805,25 +727,22 @@
             const targetDateStr = formatInputDateToSheetFormat(selectedIsoDate);
             const selectedAgent = document.getElementById("agentFilter").value;
             const agentSuffix = selectedAgent === "ALL" ? "Tous" : selectedAgent.replace(/\s+/g, "_").replace(/\//g, "-");
-            const pageSuffix = currentPage === 2 ? "_DateReel" : "";
-            const dateColHeader = currentPage === 1 ? "Date Saisie" : "Date Réel";
 
             const binomeLookup = construireMappingBinomes(targetDateStr);
             const localElementsCount = {};
-            const individualElementsCount = {};
 
             allRowsData.forEach(row => {
-                if (!estLigneValidePourPage(row)) return;
-
                 const refCell = row.c.at(0);
                 const agentCell = row.c.at(1);
-                const dateCell = getActiveDateCell(row);
+                const dateCell = row.c.at(2);
                 const elementCell = row.c.at(4);
 
                 if (refCell && refCell.v && dateCell) {
                     const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "Tsy voalaza";
                     const rawElement = (elementCell && elementCell.v) ? String(elementCell.v).trim() : "";
                     const dateOnly = extractDateOnly(dateCell);
+
+                    if (rawAgent.toUpperCase() === "ORLI") return;
 
                     const finalAgent = normaliserAgent(rawAgent, binomeLookup);
                     const matchDate = (dateOnly === targetDateStr);
@@ -832,13 +751,6 @@
                     if (matchDate && matchAgent) {
                         if (!localElementsCount[finalAgent]) localElementsCount[finalAgent] = 0;
                         if (rawElement !== "") localElementsCount[finalAgent] += 1;
-
-                        const nomsIndiv = finalAgent.split(/[\/,]/).map(n => n.trim()).filter(n => n !== "");
-                        nomsIndiv.forEach(nom => {
-                            const cle = nom.toUpperCase();
-                            if (!individualElementsCount[cle]) individualElementsCount[cle] = 0;
-                            if (rawElement !== "") individualElementsCount[cle] += 1;
-                        });
                     }
                 }
             });
@@ -909,39 +821,7 @@
 
             const minAgentText = `${minAgents.join(", ")} (${minElem} élém.)`;
             const maxAgentText = `${maxAgents.join(", ")} (${maxElem} élém.)`;
-
-            let faibleCount = Infinity;
-            let faibleElem = Infinity;
-            let faibleAgents = [];
-
-            let fortCount = -Infinity;
-            let fortElem = -Infinity;
-            let fortAgents = [];
-
-            agentsIndividuelsTries.forEach(agObj => {
-                const refCount = agObj.total;
-                const elemCount = individualElementsCount[agObj.nomAffiche.toUpperCase()] || 0;
-
-                if (refCount < faibleCount || (refCount === faibleCount && elemCount < faibleElem)) {
-                    faibleCount = refCount;
-                    faibleElem = elemCount;
-                    faibleAgents = [agObj.nomAffiche];
-                } else if (refCount === faibleCount && elemCount === faibleElem) {
-                    faibleAgents.push(agObj.nomAffiche);
-                }
-
-                if (refCount > fortCount || (refCount === fortCount && elemCount > fortElem)) {
-                    fortCount = refCount;
-                    fortElem = elemCount;
-                    fortAgents = [agObj.nomAffiche];
-                } else if (refCount === fortCount && elemCount === fortElem) {
-                    fortAgents.push(agObj.nomAffiche);
-                }
-            });
-
-            const faibleAgentText = `${faibleAgents.join(", ")} (${faibleElem} élém.)`;
-            const fortAgentText = `${fortAgents.join(", ")} (${fortElem} élém.)`;
-                     const leftRows = [];
+            const leftRows = [];
             agentsTries.forEach(agent => {
                 const liste = groupesParAgent[agent];
                 leftRows.push({ type: "agent-header", text: `AGENT : ${agent}` });
@@ -954,7 +834,7 @@
             });
 
             const totalGridRows = Math.max(leftRows.length, agentsIndividuelsTries.length + 4);
-            const finalGridRows = Math.max(totalGridRows, 11);
+            const finalGridRows = Math.max(totalGridRows, 7);
             const bdr = "border: 1px solid #94a3b8;";
 
             let tableHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">';
@@ -962,14 +842,12 @@
             tableHtml += '<table style="border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 11pt;">';
             tableHtml += '<colgroup><col width="45"><col width="105"><col width="175"><col width="125"><col width="25"><col width="25"><col width="25"><col width="185"><col width="55"><col width="190"><col width="190"><\/colgroup><tbody>';
 
-            tableHtml += '<tr style="height: 36px;"><td colspan="4" style="font-size: 22pt; font-weight: bold; color: #1f4e78; text-align: center; vertical-align: middle; padding: 4px 8px;">DETAILS<\/td><td><\/td><td><\/td><td><\/td><td colspan="4" style="font-size: 22pt; font-weight: bold; color: #1f4e78; text-align: center; vertical-align: middle; padding: 4px 8px;">EVALUATION AGENT<\/td><\/tr>';
-            tableHtml += '<tr style="height: 14px;"><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><\/tr>';
-
             const cellPad = "padding: 3px 8px; vertical-align: middle;";
 
-            for (let r = 0; r < finalGridRows; r++) {
-                const rowHeight = (r === 5 || r === 9) ? "42px" : "24px";
+                        for (let r = 0; r < finalGridRows; r++) {
+                const rowHeight = (r === 2) ? "42px" : "24px";
                 tableHtml += `<tr style="height: ${rowHeight};">`;
+
 
                 const leftItem = leftRows[r];
                 if (!leftItem || leftItem.type === "spacer") {
@@ -978,7 +856,7 @@
                     tableHtml += `<td colspan="4" style="background-color: #1f4e78; color: #ffffff; font-weight: bold; text-align: left; ${cellPad} ${bdr}">${leftItem.text}<\/td>`;
                 } else if (leftItem.type === "col-header") {
                     tableHtml += `<td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">N°<\/td>`;
-                    tableHtml += `<td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${dateColHeader}<\/td>`;
+                    tableHtml += `<td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">Date Saisie<\/td>`;
                     tableHtml += `<td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">Référence<\/td>`;
                     tableHtml += `<td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">Famille<\/td>`;
                 } else if (leftItem.type === "data") {
@@ -1006,27 +884,18 @@
                 }
 
                 if (r === 0) {
-                    tableHtml += `<td colspan="2" style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL GÉNÉRAL RÉFÉRENCES<\/td>`;
-                } else if (r === 1) {
-                    tableHtml += `<td colspan="2" style="background-color: #eff6ff; color: #1e3a8a; font-weight: bold; font-size: 14pt; text-align: center; ${cellPad} ${bdr}">${totalGeneral}<\/td>`;
-                } else if (r === 3) {
                     tableHtml += `<td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MIN RÉFÉRENCE<\/td>`;
                     tableHtml += `<td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MAX RÉFÉRENCE<\/td>`;
-                } else if (r === 4) {
+                } else if (r === 1) {
                     tableHtml += `<td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${minCount}<\/td>`;
                     tableHtml += `<td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${maxCount}<\/td>`;
-                } else if (r === 5) {
+                } else if (r === 2) {
                     tableHtml += `<td style="background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${minAgentText}<\/td>`;
                     tableHtml += `<td style="background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${maxAgentText}<\/td>`;
-                } else if (r === 7) {
-                    tableHtml += `<td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">AGENT FAIBLE<\/td>`;
-                    tableHtml += `<td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">AGENT FORT<\/td>`;
-                } else if (r === 8) {
-                    tableHtml += `<td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${faibleCount}<\/td>`;
-                    tableHtml += `<td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${fortCount}<\/td>`;
-                } else if (r === 9) {
-                    tableHtml += `<td style="background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${faibleAgentText}<\/td>`;
-                    tableHtml += `<td style="background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${fortAgentText}<\/td>`;
+                } else if (r === 4) {
+                    tableHtml += `<td colspan="2" style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL GÉNÉRAL RÉFÉRENCES<\/td>`;
+                } else if (r === 5) {
+                    tableHtml += `<td colspan="2" style="background-color: #eff6ff; color: #1e3a8a; font-weight: bold; font-size: 14pt; text-align: center; ${cellPad} ${bdr}">${totalGeneral}<\/td>`;
                 } else {
                     tableHtml += '<td colspan="2"><\/td>';
                 }
@@ -1041,7 +910,7 @@
             const a = document.createElement("a");
 
             a.href = url;
-            a.download = `Suivi_Saisie_${selectedIsoDate}_${agentSuffix}${pageSuffix}.xls`;
+            a.download = `Suivi_Saisie_${selectedIsoDate}_${agentSuffix}.xls`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
