@@ -20,11 +20,21 @@
             align-items: stretch;
         }
 
+                  .top-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 28px;
+            margin-bottom: 14px;
+        }
+
         .page-tabs {
             display: flex;
             gap: 10px;
-            margin-bottom: 14px;
+            margin-bottom: 0;
         }
+
 
         .tab-btn {
             padding: 10px 20px;
@@ -328,27 +338,29 @@
     </style>
 </head>
 <body>
-    <div class="page-tabs no-print">
-        <button class="tab-btn active" id="tabPage1" onclick="changerPage(1)">PAR DATE DE SAISIE</button>
-        <button class="tab-btn" id="tabPage2" onclick="changerPage(2)">DATE RÉEL (DATE EO @FICHE)</button>
+       <div class="top-bar no-print">
+        <div class="page-tabs">
+            <button class="tab-btn active" id="tabPage1" onclick="changerPage(1)">PAR DATE DE SAISIE</button>
+            <button class="tab-btn" id="tabPage2" onclick="changerPage(2)">DATE RÉEL (DATE EO @FICHE)</button>
+        </div>
+
+        <div class="filters-wrapper" style="margin-bottom: 0; width: auto;">
+            <div class="filter-box">
+                <label for="dateFilter">DATE :</label>
+                <input type="date" id="dateFilter" onchange="onDateChange()">
+            </div>
+            <div class="filter-box">
+                <label for="agentFilter">AGENT :</label>
+                <select id="agentFilter" onchange="appliquerFiltres()">
+                    <option value="ALL">TOUS</option>
+                </select>
+            </div>
+        </div>
     </div>
 
     <div class="main-dashboard">
         <div class="left-panel">
             <h2 id="mainTitle">SUIVI INVENTAIRE PAR DATE DE SAISIE</h2>
-
-            <div class="filters-wrapper no-print">
-                <div class="filter-box">
-                    <label for="dateFilter">DATE :</label>
-                    <input type="date" id="dateFilter" onchange="onDateChange()">
-                </div>
-                <div class="filter-box">
-                    <label for="agentFilter">AGENT :</label>
-                    <select id="agentFilter" onchange="appliquerFiltres()">
-                        <option value="ALL">TOUS</option>
-                    </select>
-                </div>
-            </div>
 
             <div class="speedometer-wrapper">
                 <div class="famille-badge tissu-badge">
@@ -923,6 +935,8 @@
             const agentSuffix = selectedAgent === "ALL" ? "Tous" : selectedAgent.replace(/\s+/g, "_").replace(/\//g, "-");
             const pageSuffix = currentPage === 2 ? "_DateReel" : "";
             const dateColHeader = currentPage === 1 ? "Date Saisie" : "Date Réel";
+            const totalSemaineExcel = parseInt(document.getElementById("semaineCount").textContent, 10) || 0;
+
 
             const binomeLookup = construireMappingBinomes(targetDateStr);
             const localElementsCount = {};
@@ -1067,8 +1081,8 @@
                 leftRows.push({ type: "total", agent: agent, count: liste.length });
                 leftRows.push({ type: "spacer" });
             });
-            const totalGridRows = Math.max(leftRows.length, agentsIndividuelsTries.length + 4);
-            const finalGridRows = Math.max(totalGridRows, 11);
+                       const totalGridRows = Math.max(leftRows.length, agentsIndividuelsTries.length + 4);
+            const finalGridRows = Math.max(totalGridRows, 13);
             const bdr = "border: 1px solid #94a3b8;";
 
             let tableHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">';
@@ -1082,7 +1096,7 @@
             const cellPad = "padding: 3px 8px; vertical-align: middle;";
 
             for (let r = 0; r < finalGridRows; r++) {
-                const rowHeight = (r === 5 || r === 9) ? "42px" : "24px";
+                const rowHeight = (r === 7 || r === 11) ? "42px" : "24px";
                 tableHtml += `<tr style="height: ${rowHeight};">`;
 
                 const leftItem = leftRows[r];
@@ -1120,25 +1134,29 @@
                 }
 
                 if (r === 0) {
-                    tableHtml += `<td colspan="2" style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL GÉNÉRAL RÉFÉRENCES<\/td>`;
+                    tableHtml += `<td colspan="2" style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL PAR JOUR<\/td>`;
                 } else if (r === 1) {
                     tableHtml += `<td colspan="2" style="background-color: #eff6ff; color: #1e3a8a; font-weight: bold; font-size: 14pt; text-align: center; ${cellPad} ${bdr}">${totalGeneral}<\/td>`;
+                } else if (r === 2) {
+                    tableHtml += `<td colspan="2" style="background-color: #0369a1; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL SEMAINE ACTUELLE<\/td>`;
                 } else if (r === 3) {
-                    tableHtml += `<td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MIN RÉFÉRENCE<\/td>`;
-                    tableHtml += `<td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MAX RÉFÉRENCE<\/td>`;
-                } else if (r === 4) {
+                    tableHtml += `<td colspan="2" style="background-color: #e0f2fe; color: #0c4a6e; font-weight: bold; font-size: 14pt; text-align: center; ${cellPad} ${bdr}">${totalSemaineExcel}<\/td>`;
+                } else if (r === 5) {
+                    tableHtml += `<td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MIN<\/td>`;
+                    tableHtml += `<td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MAX<\/td>`;
+                } else if (r === 6) {
                     tableHtml += `<td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${minCount}<\/td>`;
                     tableHtml += `<td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${maxCount}<\/td>`;
-                } else if (r === 5) {
+                } else if (r === 7) {
                     tableHtml += `<td style="background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${minAgentText}<\/td>`;
                     tableHtml += `<td style="background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${maxAgentText}<\/td>`;
-                } else if (r === 7) {
+                } else if (r === 9) {
                     tableHtml += `<td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">AGENT FAIBLE<\/td>`;
                     tableHtml += `<td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">AGENT FORT<\/td>`;
-                } else if (r === 8) {
+                } else if (r === 10) {
                     tableHtml += `<td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${faibleCount}<\/td>`;
                     tableHtml += `<td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${fortCount}<\/td>`;
-                } else if (r === 9) {
+                } else if (r === 11) {
                     tableHtml += `<td style="background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${faibleAgentText}<\/td>`;
                     tableHtml += `<td style="background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${fortAgentText}<\/td>`;
                 } else {
