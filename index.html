@@ -652,6 +652,49 @@
             return binomeLookup;
         }
 
+               function canonicaliserBinome(rawAgent) {
+            const clean = rawAgent.trim();
+            if (!clean) return "Tsy voalaza";
+            if (!clean.includes("/")) return clean;
+
+            const membres = clean.split("/")
+                .map(m => m.trim())
+                .filter(m => m !== "");
+
+            membres.sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+            return membres.join("/");
+        }
+
+        function construireMappingBinomesSemaine(bornes) {
+            const binomeLookup = {};
+            allRowsData.forEach(row => {
+                if (!estLigneValidePourPage(row)) return;
+
+                const refCell = row.c.at(0);
+                const agentCell = row.c.at(1);
+                const dateCell = getActiveDateCell(row);
+
+                if (refCell && refCell.v && dateCell) {
+                    const dateOnlyStr = extractDateOnly(dateCell);
+                    const dateObj = parseSheetDateToObj(dateOnlyStr);
+                    if (dateObj && dateObj >= bornes.lundi && dateObj <= bornes.dimanche) {
+                        const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "";
+                        if (rawAgent !== "" && rawAgent.includes("/")) {
+                            const canonique = canonicaliserBinome(rawAgent);
+                            const membres = canonique.split("/");
+                            membres.forEach(membre => {
+                                const key = membre.toUpperCase();
+                                if (!binomeLookup[key]) {
+                                    binomeLookup[key] = canonique;
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+            return binomeLookup;
+        }
+
         function construireMappingBinomes(targetDateStr) {
             const binomeLookup = {};
             allRowsData.forEach(row => {
@@ -666,11 +709,12 @@
                     if (dateOnly === targetDateStr) {
                         const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "";
                         if (rawAgent !== "" && rawAgent.includes("/")) {
-                            const membres = rawAgent.split("/").map(m => m.trim()).filter(m => m !== "");
+                            const canonique = canonicaliserBinome(rawAgent);
+                            const membres = canonique.split("/");
                             membres.forEach(membre => {
                                 const key = membre.toUpperCase();
                                 if (!binomeLookup[key]) {
-                                    binomeLookup[key] = rawAgent;
+                                    binomeLookup[key] = canonique;
                                 }
                             });
                         }
@@ -683,7 +727,7 @@
         function normaliserAgent(rawAgent, binomeLookup) {
             const clean = rawAgent.trim();
             if (!clean) return "Tsy voalaza";
-            if (clean.includes("/")) return clean;
+            if (clean.includes("/")) return canonicaliserBinome(clean);
             const key = clean.toUpperCase();
             return binomeLookup[key] ? binomeLookup[key] : clean;
         }
@@ -748,7 +792,6 @@
             };
             document.body.appendChild(script);
         }
-
         function traiterReponseSheets(data) {
             const statusEl = document.getElementById("statusMsg");
             try {
@@ -886,7 +929,7 @@
 
             const agentText = selectedAgent === "ALL" ? "" : ` (${selectedAgent})`;
             const pageLabel = currentPage === 2 ? " [DATE RÉEL]" : "";
-            labelEl.textContent = `RÉF. INVENTORIÉE du ${targetDateStr}${agentText}${pageLabel}`;
+            labelEl.textContent = `RÉF. NON DOUBLANT DU ${targetDateStr}${agentText}${pageLabel}`;
 
             currentFilteredList = uniqueRefsList.map((ref, idx) => ({
                 "N°": idx + 1,
@@ -899,19 +942,50 @@
             tbody.innerHTML = "";
 
             if (totalCount > 0) {
-                uniqueRefsList.forEach((ref, index) => {
-                    const agentsArray = Array.from(refMap[ref].agents);
-                    const agentsHtml = agentsArray.map(a => `<span class="agent-badge">${a}</span>`).join(" ");
-                    const familleText = refMap[ref].famille || "-";
+                const groupesWeb = {};
+                uniqueRefsList.forEach(ref => {
+                    const agentLabel = Array.from(refMap[ref].agents).join(", ");
+                    if (!groupesWeb[agentLabel]) {
+                        groupesWeb[agentLabel] = [];
+                    }
+                    groupesWeb[agentLabel].push({
+                        ref: ref,
+                        famille: refMap[ref].famille || "-"
+                    });
+                });
 
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td><strong>${ref}</strong></td>
-                        <td>${familleText}</td>
-                        <td>${agentsHtml}</td>
+                Object.keys(groupesWeb).sort().forEach(agentGroupe => {
+                    const liste = groupesWeb[agentGroupe];
+
+                    const trHeader = document.createElement("tr");
+                    trHeader.innerHTML = `
+                        <td colspan="4" style="background-color: #1f4e78; color: #ffffff; font-weight: bold; padding: 8px 12px;">
+                            AGENT : ${agentGroupe}
+                        </td>
                     `;
-                    tbody.appendChild(tr);
+                    tbody.appendChild(trHeader);
+
+                    liste.forEach((item, idx) => {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td>${idx + 1}</td>
+                            <td><strong>${item.ref}</strong></td>
+                            <td>${item.famille}</td>
+                            <td><span class="agent-badge">${agentGroupe}</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    const trTotal = document.createElement("tr");
+                    trTotal.innerHTML = `
+                        <td colspan="3" style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; text-align: right; padding: 8px 12px;">
+                            TOTAL RÉFÉRENCES (${agentGroupe}) :
+                        </td>
+                        <td style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; padding: 8px 12px;">
+                            ${liste.length}
+                        </td>
+                    `;
+                    tbody.appendChild(trTotal);
                 });
 
                 tableContainer.style.display = isDetailsVisible ? "block" : "none";
@@ -936,7 +1010,6 @@
             const pageSuffix = currentPage === 2 ? "_DateReel" : "";
             const dateColHeader = currentPage === 1 ? "Date Saisie" : "Date Réel";
             const totalSemaineExcel = parseInt(document.getElementById("semaineCount").textContent, 10) || 0;
-
 
             const binomeLookup = construireMappingBinomes(targetDateStr);
             const localElementsCount = {};
@@ -1081,7 +1154,7 @@
                 leftRows.push({ type: "total", agent: agent, count: liste.length });
                 leftRows.push({ type: "spacer" });
             });
-                       const totalGridRows = Math.max(leftRows.length, agentsIndividuelsTries.length + 4);
+            const totalGridRows = Math.max(leftRows.length, agentsIndividuelsTries.length + 4);
             const finalGridRows = Math.max(totalGridRows, 13);
             const bdr = "border: 1px solid #94a3b8;";
 
@@ -1134,16 +1207,16 @@
                 }
 
                 if (r === 0) {
-                    tableHtml += `<td colspan="2" style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL PAR JOUR<\/td>`;
+                    tableHtml += `<td colspan="2" style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL GÉNÉRAL RÉFÉRENCES<\/td>`;
                 } else if (r === 1) {
                     tableHtml += `<td colspan="2" style="background-color: #eff6ff; color: #1e3a8a; font-weight: bold; font-size: 14pt; text-align: center; ${cellPad} ${bdr}">${totalGeneral}<\/td>`;
                 } else if (r === 2) {
-                    tableHtml += `<td colspan="2" style="background-color: #0369a1; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL SEMAINE ACTUELLE<\/td>`;
+                    tableHtml += `<td colspan="2" style="background-color: #0369a1; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL SEMAINE RÉFÉRENCES<\/td>`;
                 } else if (r === 3) {
                     tableHtml += `<td colspan="2" style="background-color: #e0f2fe; color: #0c4a6e; font-weight: bold; font-size: 14pt; text-align: center; ${cellPad} ${bdr}">${totalSemaineExcel}<\/td>`;
                 } else if (r === 5) {
-                    tableHtml += `<td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MIN<\/td>`;
-                    tableHtml += `<td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MAX<\/td>`;
+                    tableHtml += `<td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MIN RÉFÉRENCE<\/td>`;
+                    tableHtml += `<td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MAX RÉFÉRENCE<\/td>`;
                 } else if (r === 6) {
                     tableHtml += `<td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${minCount}<\/td>`;
                     tableHtml += `<td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${maxCount}<\/td>`;
