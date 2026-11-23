@@ -59,6 +59,7 @@
             color: #ffffff;
             box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
         }
+
         .main-dashboard {
             display: flex;
             flex-direction: row;
@@ -95,7 +96,104 @@
             margin: 0 0 12px 0;
             font-size: 1.5rem;
         }
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:,">
+    <title>Suivi INV by Princi</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .top-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 28px;
+            margin-bottom: 14px;
+        }
+
+        .page-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 0;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            background-color: #ffffff;
+            color: #5f6368;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+        }
+
+        .tab-btn.active {
+            background-color: #1a73e8;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+        }
+
+        .main-dashboard {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            width: 100%;
+            min-height: calc(100vh - 82px);
+        }
+
+        .left-panel {
+            flex: 1.15;
+            background: #ffffff;
+            padding: 20px 24px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            text-align: center;
+        }
+
+        .right-panel {
+            flex: 1;
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            color: #202124;
+            margin: 0 0 12px 0;
+            font-size: 1.5rem;
+        }
         .filters-wrapper {
             display: flex;
             flex-wrap: wrap;
@@ -113,6 +211,7 @@
             padding: 8px 14px;
             border-radius: 10px;
             border: 1px solid #e0e0e0;
+            position: relative;
         }
 
         .filter-box label {
@@ -121,8 +220,7 @@
             font-size: 0.95rem;
         }
 
-        .filter-box input[type="date"],
-        .filter-box select {
+        .filter-box input[type="date"] {
             padding: 6px 10px;
             border: 1px solid #ccc;
             border-radius: 6px;
@@ -131,6 +229,119 @@
             color: #333;
             background-color: #fff;
             cursor: pointer;
+        }
+
+        .agent-multiselect {
+            position: relative;
+            min-width: 190px;
+        }
+
+        .agent-select-btn {
+            width: 100%;
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: #333;
+            background-color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .agent-select-btn:hover {
+            border-color: #1a73e8;
+        }
+
+        .agent-select-arrow {
+            font-size: 0.75rem;
+            color: #5f6368;
+            transition: transform 0.2s ease;
+        }
+
+        .agent-multiselect.open .agent-select-arrow {
+            transform: rotate(180deg);
+        }
+
+        .agent-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            min-width: 240px;
+            max-height: 290px;
+            overflow-y: auto;
+            background: #ffffff;
+            border: 1px solid #dadce0;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+            z-index: 999;
+            padding: 6px 0;
+        }
+
+        .agent-multiselect.open .agent-dropdown-menu {
+            display: block;
+        }
+
+        .agent-option-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 14px;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.15s ease;
+            font-size: 0.93rem;
+            color: #202124;
+            font-weight: 500;
+        }
+
+        .agent-option-item:hover {
+            background-color: #f1f3f4;
+        }
+
+        .agent-option-item.all-option {
+            border-bottom: 1px solid #e8eaed;
+            font-weight: 700;
+            color: #1a73e8;
+            margin-bottom: 4px;
+        }
+
+        .custom-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 19px;
+            height: 19px;
+            min-width: 19px;
+            border: 2px solid #5f6368;
+            border-radius: 4px;
+            background-color: #ffffff;
+            cursor: pointer;
+            position: relative;
+            margin: 0;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .custom-checkbox:checked {
+            background-color: #1a73e8;
+            border-color: #1a73e8;
+        }
+
+        .custom-checkbox:checked::after {
+            content: "";
+            position: absolute;
+            left: 5px;
+            top: 1px;
+            width: 5px;
+            height: 10px;
+            border: solid #ffffff;
+            border-width: 0 2.4px 2.4px 0;
+            transform: rotate(45deg);
         }
         .speedometer-wrapper {
             position: relative;
@@ -203,6 +414,7 @@
         .accessoire-badge .famille-count {
             color: #5bf347;
         }
+
         .speedo-svg {
             width: 100%;
             max-width: 450px;
@@ -252,7 +464,6 @@
         .btn-refresh { background-color: #1a73e8; }
         .btn-excel { background-color: #1e8e3e; }
         .btn-print { background-color: #5f6368; }
-
         .logo-placeholder {
             flex: 1;
             display: flex;
@@ -271,6 +482,7 @@
             object-fit: contain;
             opacity: 0.95;
         }
+
         .table-container {
             margin-top: 20px;
             flex: 1;
@@ -350,14 +562,17 @@
                 <input type="date" id="dateFilter" onchange="onDateChange()">
             </div>
             <div class="filter-box">
-                <label for="agentFilter">AGENT :</label>
-                <select id="agentFilter" onchange="appliquerFiltres()">
-                    <option value="ALL">TOUS</option>
-                </select>
+                <label>AGENT :</label>
+                <div class="agent-multiselect" id="agentMultiselect">
+                    <button type="button" class="agent-select-btn" id="agentSelectBtn" onclick="toggleAgentDropdown(event)">
+                        <span id="agentBtnText">TOUS</span>
+                        <span class="agent-select-arrow">▼</span>
+                    </button>
+                    <div class="agent-dropdown-menu" id="agentDropdownMenu" onclick="event.stopPropagation()"></div>
+                </div>
             </div>
         </div>
     </div>
-
     <div class="main-dashboard">
         <div class="left-panel">
             <h2 id="mainTitle">SUIVI INVENTAIRE PAR DATE DE SAISIE</h2>
@@ -443,6 +658,22 @@
         let allRowsData = [];
         let currentFilteredList = [];
         let isDetailsVisible = false;
+        let selectedAgentsSet = new Set(["ALL"]);
+
+        function toggleAgentDropdown(event) {
+            event.stopPropagation();
+            const container = document.getElementById("agentMultiselect");
+            if (container) {
+                container.classList.toggle("open");
+            }
+        }
+
+        document.addEventListener("click", function (event) {
+            const container = document.getElementById("agentMultiselect");
+            if (container && !container.contains(event.target)) {
+                container.classList.remove("open");
+            }
+        });
 
         function changerPage(pageNum) {
             if (currentPage === pageNum) return;
@@ -464,7 +695,8 @@
             if (logoPlaceholder) logoPlaceholder.style.display = "flex";
             if (btnDetails) btnDetails.textContent = "DETAILS";
 
-            mettreAJourListeAgents("ALL");
+            selectedAgentsSet = new Set(["ALL"]);
+            mettreAJourListeAgents();
             appliquerFiltres();
         }
 
@@ -623,7 +855,6 @@
             if (isNaN(dd) || isNaN(mm) || isNaN(yyyy)) return null;
             return new Date(yyyy, mm, dd, 12, 0, 0);
         }
-
         function construireFirstDateParRef() {
             const firstDateMap = {};
             allRowsData.forEach(row => {
@@ -649,6 +880,7 @@
             });
             return firstDateMap;
         }
+
         function canonicaliserBinome(rawAgent) {
             const clean = rawAgent.trim();
             if (!clean) return "Tsy voalaza";
@@ -729,7 +961,12 @@
             return binomeLookup[key] ? binomeLookup[key] : clean;
         }
 
-        function calculerTotalSemaine(selectedIsoDate, selectedAgent, firstDateMap) {
+        function isAgentSelected(agentName) {
+            if (selectedAgentsSet.has("ALL")) return true;
+            return selectedAgentsSet.has(agentName);
+        }
+
+        function calculerTotalSemaine(selectedIsoDate, firstDateMap) {
             const semaineEl = document.getElementById("semaineCount");
             if (!semaineEl) return;
 
@@ -760,8 +997,7 @@
                         const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "Tsy voalaza";
                         const finalAgent = normaliserAgent(rawAgent, binomeLookupSemaine);
 
-                        const matchAgent = (selectedAgent === "ALL" || finalAgent === selectedAgent);
-                        if (matchAgent) {
+                        if (isAgentSelected(finalAgent)) {
                             refsSemaineSet.add(refVal);
                         }
                     }
@@ -770,7 +1006,6 @@
 
             semaineEl.textContent = refsSemaineSet.size;
         }
-
         function chargerDonnees() {
             const statusEl = document.getElementById("statusMsg");
             statusEl.textContent = "ACTUALISATION ENCOURS...";
@@ -791,13 +1026,13 @@
             };
             document.body.appendChild(script);
         }
+
         function traiterReponseSheets(data) {
             const statusEl = document.getElementById("statusMsg");
             try {
                 allRowsData = data.table.rows || [];
 
-                const previousAgent = document.getElementById("agentFilter").value;
-                mettreAJourListeAgents(previousAgent);
+                mettreAJourListeAgents();
                 appliquerFiltres();
 
                 const nowTime = new Date().toLocaleTimeString('fr-FR');
@@ -810,12 +1045,44 @@
         }
 
         function onDateChange() {
-            mettreAJourListeAgents("ALL");
+            selectedAgentsSet = new Set(["ALL"]);
+            mettreAJourListeAgents();
             appliquerFiltres();
         }
 
-        function mettreAJourListeAgents(selectedToKeep) {
-            const agentSelect = document.getElementById("agentFilter");
+        function updateAgentButtonLabel() {
+            const btnTextEl = document.getElementById("agentBtnText");
+            if (!btnTextEl) return;
+
+            if (selectedAgentsSet.has("ALL") || selectedAgentsSet.size === 0) {
+                btnTextEl.textContent = "TOUS";
+            } else if (selectedAgentsSet.size === 1) {
+                btnTextEl.textContent = Array.from(selectedAgentsSet)[0];
+            } else {
+                btnTextEl.textContent = `${selectedAgentsSet.size} AGENTS SÉLECTIONNÉS`;
+            }
+        }
+
+        function handleAgentCheckboxChange(value, checked) {
+            if (value === "ALL") {
+                selectedAgentsSet = new Set(["ALL"]);
+            } else {
+                selectedAgentsSet.delete("ALL");
+                if (checked) {
+                    selectedAgentsSet.add(value);
+                } else {
+                    selectedAgentsSet.delete(value);
+                }
+                if (selectedAgentsSet.size === 0) {
+                    selectedAgentsSet.add("ALL");
+                }
+            }
+            mettreAJourListeAgents();
+            appliquerFiltres();
+        }
+
+        function mettreAJourListeAgents() {
+            const dropdownMenu = document.getElementById("agentDropdownMenu");
             const selectedIsoDate = document.getElementById("dateFilter").value;
             const targetDateStr = formatInputDateToSheetFormat(selectedIsoDate);
             const binomeLookup = construireMappingBinomes(targetDateStr);
@@ -843,21 +1110,55 @@
                 }
             });
 
-            agentSelect.innerHTML = `<option value="ALL">TOUS</option>`;
-            Array.from(agentsSet).sort().forEach(agent => {
-                const opt = document.createElement("option");
-                opt.value = agent;
-                opt.textContent = agent;
-                agentSelect.appendChild(opt);
+            const sortedAgents = Array.from(agentsSet).sort();
+
+            if (!selectedAgentsSet.has("ALL")) {
+                const validSelection = new Set();
+                selectedAgentsSet.forEach(ag => {
+                    if (agentsSet.has(ag)) validSelection.add(ag);
+                });
+                if (validSelection.size === 0) {
+                    selectedAgentsSet = new Set(["ALL"]);
+                } else {
+                    selectedAgentsSet = validSelection;
+                }
+            }
+
+            dropdownMenu.innerHTML = "";
+
+            const allLabel = document.createElement("label");
+            allLabel.className = "agent-option-item all-option";
+            const allCheckbox = document.createElement("input");
+            allCheckbox.type = "checkbox";
+            allCheckbox.className = "custom-checkbox";
+            allCheckbox.checked = selectedAgentsSet.has("ALL");
+            allCheckbox.addEventListener("change", () => handleAgentCheckboxChange("ALL", allCheckbox.checked));
+            const allSpan = document.createElement("span");
+            allSpan.textContent = "TOUS";
+            allLabel.appendChild(allCheckbox);
+            allLabel.appendChild(allSpan);
+            dropdownMenu.appendChild(allLabel);
+
+            sortedAgents.forEach(agent => {
+                const itemLabel = document.createElement("label");
+                itemLabel.className = "agent-option-item";
+
+                const cb = document.createElement("input");
+                cb.type = "checkbox";
+                cb.className = "custom-checkbox";
+                cb.checked = !selectedAgentsSet.has("ALL") && selectedAgentsSet.has(agent);
+                cb.addEventListener("change", () => handleAgentCheckboxChange(agent, cb.checked));
+
+                const textSpan = document.createElement("span");
+                textSpan.textContent = agent;
+
+                itemLabel.appendChild(cb);
+                itemLabel.appendChild(textSpan);
+                dropdownMenu.appendChild(itemLabel);
             });
 
-            if (selectedToKeep && Array.from(agentsSet).includes(selectedToKeep)) {
-                agentSelect.value = selectedToKeep;
-            } else {
-                agentSelect.value = "ALL";
-            }
+            updateAgentButtonLabel();
         }
-
         function appliquerFiltres() {
             const countEl = document.getElementById("uniqueCount");
             const tissuEl = document.getElementById("tissuCount");
@@ -869,7 +1170,6 @@
 
             const selectedIsoDate = document.getElementById("dateFilter").value;
             const targetDateStr = formatInputDateToSheetFormat(selectedIsoDate);
-            const selectedAgent = document.getElementById("agentFilter").value;
 
             if (!targetDateStr) return;
 
@@ -894,7 +1194,7 @@
                     const finalAgent = normaliserAgent(rawAgent, binomeLookup);
 
                     const matchDate = (dateOnly === targetDateStr);
-                    const matchAgent = (selectedAgent === "ALL" || finalAgent === selectedAgent);
+                    const matchAgent = isAgentSelected(finalAgent);
 
                     if (matchDate && matchAgent && refVal !== "") {
                         if (!firstDateMap[refVal] || firstDateMap[refVal].dateStr !== targetDateStr) return;
@@ -912,6 +1212,7 @@
                     }
                 }
             });
+
             const uniqueRefsList = Object.keys(refMap);
             const totalCount = uniqueRefsList.length;
 
@@ -931,9 +1232,12 @@
             tissuEl.textContent = countTissu;
             accessoireEl.textContent = countAccessoire;
             mettreAJourAiguille(totalCount);
-            calculerTotalSemaine(selectedIsoDate, selectedAgent, firstDateMap);
+            calculerTotalSemaine(selectedIsoDate, firstDateMap);
 
-            const agentText = selectedAgent === "ALL" ? "" : ` (${selectedAgent})`;
+            let agentText = "";
+            if (!selectedAgentsSet.has("ALL") && selectedAgentsSet.size > 0) {
+                agentText = ` (${Array.from(selectedAgentsSet).join(", ")})`;
+            }
             const pageLabel = currentPage === 2 ? " [DATE RÉEL]" : "";
             labelEl.textContent = `RÉF. INVENTORIÉE du ${targetDateStr}${agentText}${pageLabel}`;
 
@@ -1002,7 +1306,6 @@
                 btnDetails.textContent = "DETAILS";
             }
         }
-
         function exporterExcel() {
             if (currentFilteredList.length === 0) {
                 alert("Tsy misy angona haondrana ho Excel amin'io daty na Agent io.");
@@ -1011,8 +1314,10 @@
 
             const selectedIsoDate = document.getElementById("dateFilter").value;
             const targetDateStr = formatInputDateToSheetFormat(selectedIsoDate);
-            const selectedAgent = document.getElementById("agentFilter").value;
-            const agentSuffix = selectedAgent === "ALL" ? "Tous" : selectedAgent.replace(/\s+/g, "_").replace(/\//g, "-");
+            let agentSuffix = "Tous";
+            if (!selectedAgentsSet.has("ALL") && selectedAgentsSet.size > 0) {
+                agentSuffix = Array.from(selectedAgentsSet).join("_").replace(/\s+/g, "_").replace(/\//g, "-");
+            }
             const pageSuffix = currentPage === 2 ? "_DateReel" : "";
             const dateColHeader = currentPage === 1 ? "Date Saisie" : "Date Réel";
             const totalSemaineExcel = parseInt(document.getElementById("semaineCount").textContent, 10) || 0;
@@ -1038,7 +1343,7 @@
 
                     const finalAgent = normaliserAgent(rawAgent, binomeLookup);
                     const matchDate = (dateOnly === targetDateStr);
-                    const matchAgent = (selectedAgent === "ALL" || finalAgent === selectedAgent);
+                    const matchAgent = isAgentSelected(finalAgent);
 
                     if (matchDate && matchAgent && refVal !== "") {
                         if (!firstDateMap[refVal] || firstDateMap[refVal].dateStr !== targetDateStr) return;
@@ -1055,7 +1360,6 @@
                     }
                 }
             });
-
             const groupesParAgent = {};
             const agentsIndividuelsMap = {};
 
@@ -1084,6 +1388,7 @@
                     }
                 });
             });
+
             const agentsTries = Object.keys(groupesParAgent).sort();
             const agentsIndividuelsTries = Object.values(agentsIndividuelsMap).sort((a, b) =>
                 a.nomAffiche.localeCompare(b.nomAffiche, 'fr', { sensitivity: 'base' })
@@ -1164,6 +1469,7 @@
                 leftRows.push({ type: "total", agent: agent, count: liste.length });
                 leftRows.push({ type: "spacer" });
             });
+
             const totalGridRows = Math.max(leftRows.length, agentsIndividuelsTries.length + 4);
             const finalGridRows = Math.max(totalGridRows, 13);
             const bdr = "border: 1px solid #94a3b8;";
@@ -1202,7 +1508,6 @@
                     tableHtml += `<td colspan="3" style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; text-align: right; ${cellPad} ${bdr}">TOTAL RÉFÉRENCES (${leftItem.agent}) :<\/td>`;
                     tableHtml += `<td style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${leftItem.count}<\/td>`;
                 }
-
                 tableHtml += '<td colspan="3"><\/td>';
 
                 if (r === 0) {
@@ -1217,11 +1522,11 @@
                 }
 
                 if (r === 0) {
-                    tableHtml += `<td colspan="2" style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL GÉNÉRAL RÉFÉRENCES (Jour-J)<\/td>`;
+                    tableHtml += `<td colspan="2" style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL GÉNÉRAL RÉFÉRENCES<\/td>`;
                 } else if (r === 1) {
                     tableHtml += `<td colspan="2" style="background-color: #eff6ff; color: #1e3a8a; font-weight: bold; font-size: 14pt; text-align: center; ${cellPad} ${bdr}">${totalGeneral}<\/td>`;
                 } else if (r === 2) {
-                    tableHtml += `<td colspan="2" style="background-color: #0369a1; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL RÉFÉRENCES (Semaine-S)<\/td>`;
+                    tableHtml += `<td colspan="2" style="background-color: #0369a1; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL SEMAINE RÉFÉRENCES<\/td>`;
                 } else if (r === 3) {
                     tableHtml += `<td colspan="2" style="background-color: #e0f2fe; color: #0c4a6e; font-weight: bold; font-size: 14pt; text-align: center; ${cellPad} ${bdr}">${totalSemaineExcel}<\/td>`;
                 } else if (r === 5) {
