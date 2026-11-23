@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:,">
     <title>Suivi INV by Princi</title>
     <style>
         * {
@@ -20,7 +21,7 @@
             align-items: stretch;
         }
 
-                  .top-bar {
+        .top-bar {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
@@ -34,7 +35,6 @@
             gap: 10px;
             margin-bottom: 0;
         }
-
 
         .tab-btn {
             padding: 10px 20px;
@@ -101,8 +101,8 @@
             flex-wrap: wrap;
             justify-content: center;
             gap: 12px;
-            margin-bottom: 12px;
-            width: 100%;
+            margin-bottom: 0;
+            width: auto;
         }
 
         .filter-box {
@@ -327,7 +327,7 @@
             body { background-color: #fff; padding: 0; display: block; }
             .main-dashboard { display: block; }
             .left-panel, .right-panel { box-shadow: none; padding: 0; }
-            .no-print, .logo-placeholder, .page-tabs { display: none !important; }
+            .no-print, .logo-placeholder, .top-bar { display: none !important; }
             .speedometer-wrapper {
                 background: #1e2229 !important;
                 -webkit-print-color-adjust: exact;
@@ -338,13 +338,13 @@
     </style>
 </head>
 <body>
-       <div class="top-bar no-print">
+    <div class="top-bar no-print">
         <div class="page-tabs">
             <button class="tab-btn active" id="tabPage1" onclick="changerPage(1)">PAR DATE DE SAISIE</button>
             <button class="tab-btn" id="tabPage2" onclick="changerPage(2)">DATE RÉEL (DATE EO @FICHE)</button>
         </div>
 
-        <div class="filters-wrapper" style="margin-bottom: 0; width: auto;">
+        <div class="filters-wrapper">
             <div class="filter-box">
                 <label for="dateFilter">DATE :</label>
                 <input type="date" id="dateFilter" onchange="onDateChange()">
@@ -402,7 +402,7 @@
                     </g>
                 </svg>
 
-                <div class="counter-label" id="counterLabel">ACTUALISATION ENCOURS...</div>
+                <div class="counter-label" id="counterLabel">Référence Unique</div>
             </div>
 
             <div class="status no-print" id="statusMsg">ACTUALISATION ENCOURS...</div>
@@ -476,7 +476,7 @@
             const typeColB = (typeColBCell && typeColBCell.v) ? String(typeColBCell.v).trim().toUpperCase() : "";
 
             if (rawAgent === "ORLI" || typeColB === "ORLI") return false;
-            if (currentPage === 2 && typeColB !== "INV") return false;
+            if (typeColB !== "INV") return false;
 
             return true;
         }
@@ -623,36 +623,33 @@
             if (isNaN(dd) || isNaN(mm) || isNaN(yyyy)) return null;
             return new Date(yyyy, mm, dd, 12, 0, 0);
         }
-                function construireMappingBinomesSemaine(bornes) {
-            const binomeLookup = {};
+
+        function construireFirstDateParRef() {
+            const firstDateMap = {};
             allRowsData.forEach(row => {
                 if (!estLigneValidePourPage(row)) return;
 
                 const refCell = row.c.at(0);
-                const agentCell = row.c.at(1);
                 const dateCell = getActiveDateCell(row);
 
                 if (refCell && refCell.v && dateCell) {
-                    const dateOnlyStr = extractDateOnly(dateCell);
-                    const dateObj = parseSheetDateToObj(dateOnlyStr);
-                    if (dateObj && dateObj >= bornes.lundi && dateObj <= bornes.dimanche) {
-                        const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "";
-                        if (rawAgent !== "" && rawAgent.includes("/")) {
-                            const membres = rawAgent.split("/").map(m => m.trim()).filter(m => m !== "");
-                            membres.forEach(membre => {
-                                const key = membre.toUpperCase();
-                                if (!binomeLookup[key]) {
-                                    binomeLookup[key] = rawAgent;
-                                }
-                            });
+                    const refVal = String(refCell.v).trim().toUpperCase();
+                    const dateOnly = extractDateOnly(dateCell);
+                    const dateObj = parseSheetDateToObj(dateOnly);
+
+                    if (refVal !== "" && dateObj) {
+                        if (!firstDateMap[refVal] || dateObj.getTime() < firstDateMap[refVal].time) {
+                            firstDateMap[refVal] = {
+                                dateStr: dateOnly,
+                                time: dateObj.getTime()
+                            };
                         }
                     }
                 }
             });
-            return binomeLookup;
+            return firstDateMap;
         }
-
-               function canonicaliserBinome(rawAgent) {
+        function canonicaliserBinome(rawAgent) {
             const clean = rawAgent.trim();
             if (!clean) return "Tsy voalaza";
             if (!clean.includes("/")) return clean;
@@ -732,7 +729,7 @@
             return binomeLookup[key] ? binomeLookup[key] : clean;
         }
 
-        function calculerTotalSemaine(selectedIsoDate, selectedAgent) {
+        function calculerTotalSemaine(selectedIsoDate, selectedAgent, firstDateMap) {
             const semaineEl = document.getElementById("semaineCount");
             if (!semaineEl) return;
 
@@ -758,6 +755,8 @@
                     const dateObj = parseSheetDateToObj(dateOnlyStr);
 
                     if (dateObj && dateObj >= bornes.lundi && dateObj <= bornes.dimanche && refVal !== "") {
+                        if (!firstDateMap[refVal] || firstDateMap[refVal].dateStr !== dateOnlyStr) return;
+
                         const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "Tsy voalaza";
                         const finalAgent = normaliserAgent(rawAgent, binomeLookupSemaine);
 
@@ -820,6 +819,7 @@
             const selectedIsoDate = document.getElementById("dateFilter").value;
             const targetDateStr = formatInputDateToSheetFormat(selectedIsoDate);
             const binomeLookup = construireMappingBinomes(targetDateStr);
+            const firstDateMap = construireFirstDateParRef();
 
             const agentsSet = new Set();
 
@@ -831,8 +831,11 @@
                 const dateCell = getActiveDateCell(row);
 
                 if (refCell && refCell.v && dateCell) {
+                    const refVal = String(refCell.v).trim().toUpperCase();
                     const dateOnly = extractDateOnly(dateCell);
-                    if (dateOnly === targetDateStr) {
+                    if (dateOnly === targetDateStr && refVal !== "") {
+                        if (!firstDateMap[refVal] || firstDateMap[refVal].dateStr !== targetDateStr) return;
+
                         const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "Tsy voalaza";
                         const finalAgent = normaliserAgent(rawAgent, binomeLookup);
                         agentsSet.add(finalAgent);
@@ -871,6 +874,7 @@
             if (!targetDateStr) return;
 
             const binomeLookup = construireMappingBinomes(targetDateStr);
+            const firstDateMap = construireFirstDateParRef();
             const refMap = {};
 
             allRowsData.forEach(row => {
@@ -893,6 +897,8 @@
                     const matchAgent = (selectedAgent === "ALL" || finalAgent === selectedAgent);
 
                     if (matchDate && matchAgent && refVal !== "") {
+                        if (!firstDateMap[refVal] || firstDateMap[refVal].dateStr !== targetDateStr) return;
+
                         if (!refMap[refVal]) {
                             refMap[refVal] = {
                                 agents: new Set(),
@@ -925,11 +931,11 @@
             tissuEl.textContent = countTissu;
             accessoireEl.textContent = countAccessoire;
             mettreAJourAiguille(totalCount);
-            calculerTotalSemaine(selectedIsoDate, selectedAgent);
+            calculerTotalSemaine(selectedIsoDate, selectedAgent, firstDateMap);
 
             const agentText = selectedAgent === "ALL" ? "" : ` (${selectedAgent})`;
             const pageLabel = currentPage === 2 ? " [DATE RÉEL]" : "";
-            labelEl.textContent = `RÉF. NON DOUBLANT DU ${targetDateStr}${agentText}${pageLabel}`;
+            labelEl.textContent = `RÉF. INVENTORIÉE du ${targetDateStr}${agentText}${pageLabel}`;
 
             currentFilteredList = uniqueRefsList.map((ref, idx) => ({
                 "N°": idx + 1,
@@ -1012,6 +1018,7 @@
             const totalSemaineExcel = parseInt(document.getElementById("semaineCount").textContent, 10) || 0;
 
             const binomeLookup = construireMappingBinomes(targetDateStr);
+            const firstDateMap = construireFirstDateParRef();
             const localElementsCount = {};
             const individualElementsCount = {};
 
@@ -1024,6 +1031,7 @@
                 const elementCell = row.c.at(4);
 
                 if (refCell && refCell.v && dateCell) {
+                    const refVal = String(refCell.v).trim().toUpperCase();
                     const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "Tsy voalaza";
                     const rawElement = (elementCell && elementCell.v) ? String(elementCell.v).trim() : "";
                     const dateOnly = extractDateOnly(dateCell);
@@ -1032,7 +1040,9 @@
                     const matchDate = (dateOnly === targetDateStr);
                     const matchAgent = (selectedAgent === "ALL" || finalAgent === selectedAgent);
 
-                    if (matchDate && matchAgent) {
+                    if (matchDate && matchAgent && refVal !== "") {
+                        if (!firstDateMap[refVal] || firstDateMap[refVal].dateStr !== targetDateStr) return;
+
                         if (!localElementsCount[finalAgent]) localElementsCount[finalAgent] = 0;
                         if (rawElement !== "") localElementsCount[finalAgent] += 1;
 
