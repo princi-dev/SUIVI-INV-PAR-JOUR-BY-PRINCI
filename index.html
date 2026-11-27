@@ -60,12 +60,13 @@
             box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
         }
 
-        .main-dashboard {
+                .main-dashboard {
             display: flex;
             flex-direction: row;
+            align-items: stretch; /* Mampitovy tsara ny haavon'izy roa */
             gap: 20px;
             width: 100%;
-            min-height: calc(100vh - 82px);
+            height: calc(100vh - 32px); /* Haavo raikitra mifanaraka amin'ny efijery */
         }
 
         .left-panel {
@@ -79,31 +80,44 @@
             align-items: center;
             justify-content: space-between;
             text-align: center;
+            height: 100%; /* Mitovy tsara amin'ny right-panel */
         }
 
         .right-panel {
             flex: 1;
             background: #ffffff;
-            padding: 24px;
+            padding: 20px 24px;
             border-radius: 16px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             display: flex;
             flex-direction: column;
+            height: 100%;
+            min-height: 0; /* Ilaina mba handeha ny scroll ao anatiny */
+            overflow: hidden;
         }
+
+        .table-container {
+            flex: 1;
+            min-height: 0; /* Manery ny tabilao hijanona ao anaty boaty sy hamoaka scroll */
+            max-height: 100%;
+            overflow-y: auto !important; /* Mampandeha ny scroll midina */
+            margin-top: 12px;
+        }
+
+        .table-container thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background-color: #f1f5f9;
+        }
+
 
         h2 {
             color: #202124;
             margin: 0 0 12px 0;
             font-size: 1.5rem;
         }
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="data:,">
-    <title>Suivi INV by Princi</title>
-    <style>
+
         * {
             box-sizing: border-box;
         }
@@ -535,18 +549,101 @@
             .famille-count { font-size: 1.1rem; }
         }
 
-        @media print {
-            body { background-color: #fff; padding: 0; display: block; }
-            .main-dashboard { display: block; }
-            .left-panel, .right-panel { box-shadow: none; padding: 0; }
-            .no-print, .logo-placeholder, .top-bar { display: none !important; }
-            .speedometer-wrapper {
-                background: #1e2229 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
+    /* Afenina ny entête impression rehefa mijery eo amin'ny efijery */
+.print-header {
+    display: none;
+}
+
+@media print {
+    /* Afenina ny zavatra rehetra ao amin'ny pejy */
+    body * {
+        visibility: hidden;
+    }
+
+    /* Aseho ny faritra misy ny entête sy ny tabilao ihany */
+    #tableContainer, #tableContainer * {
+        visibility: visible;
+    }
+
+    /* Apetraka eo amin'ny sisiny ambony indrindra amin'ny taratasy */
+    #tableContainer {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100% !important;
+        max-height: none !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    /* Fisehon'ny entête "DETAILS PAR BINÔME" sy ny elanelana (espace) */
+    .print-header {
+        display: block !important;
+        text-align: center;
+        font-size: 20pt;
+        font-weight: bold;
+        color: #1f4e78;
+        margin-top: 10px;
+        margin-bottom: 35px; /* Elanelana malalaka alohan'ny tabilao */
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Tazonina tsy ho fotsy ny loko manga sy ny fond rehefa atao print */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
+
+            
             .table-container { max-height: none; overflow: visible; border: 1px solid #999; }
-        }
+            /* Afenina eo amin'ny efijery */
+.print-title {
+    display: none;
+}
+
+@media print {
+    body * {
+        visibility: hidden !important;
+    }
+
+    #tableContainer, #tableContainer * {
+        visibility: visible !important;
+    }
+
+    #tableContainer {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        max-height: none !important;
+        overflow: visible !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Fisehon'ny entête "DETAILS PAR BINÔME" */
+    .print-title {
+        display: table-caption !important;
+        caption-side: top !important;
+        text-align: center !important;
+        font-size: 20pt !important;
+        font-weight: bold !important;
+        color: #1f4e78 !important;
+        padding-top: 10px !important;
+        padding-bottom: 35px !important; /* Elanelana malalaka eo ambonin'ny tabilao */
+    }
+
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
+    
     </style>
 </head>
 <body>
@@ -617,10 +714,10 @@
                     </g>
                 </svg>
 
-                <div class="counter-label" id="counterLabel">Référence Unique</div>
+                <div class="counter-label" id="counterLabel">ACTUALISATION...</div>
             </div>
 
-            <div class="status no-print" id="statusMsg">ACTUALISATION ENCOURS...</div>
+            <div class="status no-print" id="statusMsg">ACTUALISATION...</div>
         </div>
         <div class="right-panel">
             <div class="actions-wrapper no-print">
@@ -634,21 +731,21 @@
                 <img src="13501.png" alt="Logo 13501" onerror="this.style.display='none'">
             </div>
 
-            <div class="table-container" id="tableContainer">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Référence</th>
-                            <th>Famille</th>
-                            <th>Agent</th>
-                        </tr>
-                    </thead>
-                    <tbody id="refTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+           <div class="table-container" id="tableContainer">
+    <table>
+        <caption class="print-title">DETAILS PAR BINÔME</caption>
+        <thead>
+            <tr>
+                <th>🎈</th>
+                <th>RÉFÉRENCE</th>
+                <th>FAMILLE</th>
+                <th>AGENT</th>
+            </tr>
+        </thead>
+        <tbody id="refTableBody"></tbody>
+    </table>
+</div>
+
     <script>
         const SHEET_ID = "19C4-g_MffI9NRb8hpYusR5vOeglJLsWssuc9ZB4KzBI";
         const SHEET_NAME = "SAISIE_INVENTAIRE";
@@ -1267,10 +1364,13 @@
                 Object.keys(groupesWeb).sort().forEach(agentGroupe => {
                     const liste = groupesWeb[agentGroupe];
 
-                    const trHeader = document.createElement("tr");
+                                       const trHeader = document.createElement("tr");
                     trHeader.innerHTML = `
                         <td colspan="4" style="background-color: #1f4e78; color: #ffffff; font-weight: bold; padding: 8px 12px;">
-                            AGENT : ${agentGroupe}
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <span>AGENT : ${agentGroupe}</span>
+                                <span style="margin-right: 15%;">Date : ${targetDateStr}</span>
+                            </div>
                         </td>
                     `;
                     tbody.appendChild(trHeader);
@@ -1306,274 +1406,237 @@
                 btnDetails.textContent = "DETAILS";
             }
         }
-        function exporterExcel() {
-            if (currentFilteredList.length === 0) {
-                alert("Tsy misy angona haondrana ho Excel amin'io daty na Agent io.");
-                return;
-            }
+    function exporterExcel() {
+    if (currentFilteredList.length === 0) {
+        alert("Tsy misy angona haondrana ho Excel amin'io daty na Agent io.");
+        return;
+    }
 
-            const selectedIsoDate = document.getElementById("dateFilter").value;
-            const targetDateStr = formatInputDateToSheetFormat(selectedIsoDate);
-            let agentSuffix = "Tous";
-            if (!selectedAgentsSet.has("ALL") && selectedAgentsSet.size > 0) {
-                agentSuffix = Array.from(selectedAgentsSet).join("_").replace(/\s+/g, "_").replace(/\//g, "-");
-            }
-            const pageSuffix = currentPage === 2 ? "_DateReel" : "";
-            const dateColHeader = currentPage === 1 ? "Date Saisie" : "Date Réel";
-            const totalSemaineExcel = parseInt(document.getElementById("semaineCount").textContent, 10) || 0;
+    const selectedIsoDate = document.getElementById("dateFilter").value;
+    const targetDateStr = formatInputDateToSheetFormat(selectedIsoDate);
+    let agentSuffix = "Tous";
+    if (!selectedAgentsSet.has("ALL") && selectedAgentsSet.size > 0) {
+        agentSuffix = Array.from(selectedAgentsSet).join("_").replace(/\s+/g, "_").replace(/\//g, "-");
+    }
 
-            const binomeLookup = construireMappingBinomes(targetDateStr);
-            const firstDateMap = construireFirstDateParRef();
-            const localElementsCount = {};
-            const individualElementsCount = {};
+    const pageSuffix = currentPage === 2 ? "_DateReel" : "";
+    const dateColHeader = currentPage === 1 ? "Date Saisie" : "Date Réel";
+    const totalSemaineExcel = parseInt(document.getElementById("semaineCount").textContent, 10) || 0;
+    const binomeLookup = construireMappingBinomes(targetDateStr);
+    const firstDateMap = construireFirstDateParRef();
+    const localElementsCount = {};
+    const individualElementsCount = {};
 
-            allRowsData.forEach(row => {
-                if (!estLigneValidePourPage(row)) return;
+    allRowsData.forEach(row => {
+        if (!estLigneValidePourPage(row)) return;
+        const refCell = row.c.at(0);
+        const agentCell = row.c.at(1);
+        const dateCell = getActiveDateCell(row);
+        const elementCell = row.c.at(4);
 
-                const refCell = row.c.at(0);
-                const agentCell = row.c.at(1);
-                const dateCell = getActiveDateCell(row);
-                const elementCell = row.c.at(4);
+        if (refCell && refCell.v && dateCell) {
+            const refVal = String(refCell.v).trim().toUpperCase();
+            const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "Tsy voalaza";
+            const rawElement = (elementCell && elementCell.v) ? String(elementCell.v).trim() : "";
+            const dateOnly = extractDateOnly(dateCell);
+            const finalAgent = normaliserAgent(rawAgent, binomeLookup);
+            const matchDate = (dateOnly === targetDateStr);
+            const matchAgent = isAgentSelected(finalAgent);
 
-                if (refCell && refCell.v && dateCell) {
-                    const refVal = String(refCell.v).trim().toUpperCase();
-                    const rawAgent = (agentCell && agentCell.v) ? String(agentCell.v).trim() : "Tsy voalaza";
-                    const rawElement = (elementCell && elementCell.v) ? String(elementCell.v).trim() : "";
-                    const dateOnly = extractDateOnly(dateCell);
+            if (matchDate && matchAgent && refVal !== "") {
+                if (!firstDateMap[refVal] || firstDateMap[refVal].dateStr !== targetDateStr) return;
+                if (!localElementsCount[finalAgent]) localElementsCount[finalAgent] = 0;
+                if (rawElement !== "") localElementsCount[finalAgent] += 1;
 
-                    const finalAgent = normaliserAgent(rawAgent, binomeLookup);
-                    const matchDate = (dateOnly === targetDateStr);
-                    const matchAgent = isAgentSelected(finalAgent);
-
-                    if (matchDate && matchAgent && refVal !== "") {
-                        if (!firstDateMap[refVal] || firstDateMap[refVal].dateStr !== targetDateStr) return;
-
-                        if (!localElementsCount[finalAgent]) localElementsCount[finalAgent] = 0;
-                        if (rawElement !== "") localElementsCount[finalAgent] += 1;
-
-                        const nomsIndiv = finalAgent.split(/[\/,]/).map(n => n.trim()).filter(n => n !== "");
-                        nomsIndiv.forEach(nom => {
-                            const cle = nom.toUpperCase();
-                            if (!individualElementsCount[cle]) individualElementsCount[cle] = 0;
-                            if (rawElement !== "") individualElementsCount[cle] += 1;
-                        });
-                    }
-                }
-            });
-            const groupesParAgent = {};
-            const agentsIndividuelsMap = {};
-
-            currentFilteredList.forEach(item => {
-                const agentGroupe = item["Agent"] || "Tsy voalaza";
-                if (!groupesParAgent[agentGroupe]) {
-                    groupesParAgent[agentGroupe] = [];
-                }
-                groupesParAgent[agentGroupe].push({
-                    date: item["Date Saisie"],
-                    ref: item["Référence"],
-                    famille: item["Famille"]
-                });
-
-                const nomsSepares = agentGroupe.split(/[\/,]/).map(n => n.trim()).filter(n => n !== "");
-                const dejaComptePourCetteRef = new Set();
-
-                nomsSepares.forEach(nom => {
+                const nomsIndiv = finalAgent.split(/[\/,]/).map(n => n.trim()).filter(n => n !== "");
+                nomsIndiv.forEach(nom => {
                     const cle = nom.toUpperCase();
-                    if (!dejaComptePourCetteRef.has(cle)) {
-                        dejaComptePourCetteRef.add(cle);
-                        if (!agentsIndividuelsMap[cle]) {
-                            agentsIndividuelsMap[cle] = { nomAffiche: nom, total: 0 };
-                        }
-                        agentsIndividuelsMap[cle].total += 1;
-                    }
+                    if (!individualElementsCount[cle]) individualElementsCount[cle] = 0;
+                    if (rawElement !== "") individualElementsCount[cle] += 1;
                 });
-            });
-
-            const agentsTries = Object.keys(groupesParAgent).sort();
-            const agentsIndividuelsTries = Object.values(agentsIndividuelsMap).sort((a, b) =>
-                a.nomAffiche.localeCompare(b.nomAffiche, 'fr', { sensitivity: 'base' })
-            );
-
-            const totalGeneral = currentFilteredList.length;
-            let minCount = Infinity;
-            let minElem = Infinity;
-            let minAgents = [];
-
-            let maxCount = -Infinity;
-            let maxElem = -Infinity;
-            let maxAgents = [];
-
-            agentsTries.forEach(agent => {
-                const refCount = groupesParAgent[agent].length;
-                const elemCount = localElementsCount[agent] || 0;
-
-                if (refCount < minCount || (refCount === minCount && elemCount < minElem)) {
-                    minCount = refCount;
-                    minElem = elemCount;
-                    minAgents = [agent];
-                } else if (refCount === minCount && elemCount === minElem) {
-                    minAgents.push(agent);
-                }
-
-                if (refCount > maxCount || (refCount === maxCount && elemCount > maxElem)) {
-                    maxCount = refCount;
-                    maxElem = elemCount;
-                    maxAgents = [agent];
-                } else if (refCount === maxCount && elemCount === maxElem) {
-                    maxAgents.push(agent);
-                }
-            });
-
-            const minAgentText = `${minAgents.join(", ")} (${minElem} élém.)`;
-            const maxAgentText = `${maxAgents.join(", ")} (${maxElem} élém.)`;
-
-            let faibleCount = Infinity;
-            let faibleElem = Infinity;
-            let faibleAgents = [];
-
-            let fortCount = -Infinity;
-            let fortElem = -Infinity;
-            let fortAgents = [];
-
-            agentsIndividuelsTries.forEach(agObj => {
-                const refCount = agObj.total;
-                const elemCount = individualElementsCount[agObj.nomAffiche.toUpperCase()] || 0;
-
-                if (refCount < faibleCount || (refCount === faibleCount && elemCount < faibleElem)) {
-                    faibleCount = refCount;
-                    faibleElem = elemCount;
-                    faibleAgents = [agObj.nomAffiche];
-                } else if (refCount === faibleCount && elemCount === faibleElem) {
-                    faibleAgents.push(agObj.nomAffiche);
-                }
-
-                if (refCount > fortCount || (refCount === fortCount && elemCount > fortElem)) {
-                    fortCount = refCount;
-                    fortElem = elemCount;
-                    fortAgents = [agObj.nomAffiche];
-                } else if (refCount === fortCount && elemCount === fortElem) {
-                    fortAgents.push(agObj.nomAffiche);
-                }
-            });
-
-            const faibleAgentText = `${faibleAgents.join(", ")} (${faibleElem} élém.)`;
-            const fortAgentText = `${fortAgents.join(", ")} (${fortElem} élém.)`;
-            const leftRows = [];
-            agentsTries.forEach(agent => {
-                const liste = groupesParAgent[agent];
-                leftRows.push({ type: "agent-header", text: `AGENT : ${agent}` });
-                leftRows.push({ type: "col-header" });
-                liste.forEach((row, idx) => {
-                    leftRows.push({ type: "data", index: idx + 1, ...row, odd: idx % 2 !== 0 });
-                });
-                leftRows.push({ type: "total", agent: agent, count: liste.length });
-                leftRows.push({ type: "spacer" });
-            });
-
-            const totalGridRows = Math.max(leftRows.length, agentsIndividuelsTries.length + 4);
-            const finalGridRows = Math.max(totalGridRows, 13);
-            const bdr = "border: 1px solid #94a3b8;";
-
-            let tableHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">';
-            tableHtml += '<head><meta charset="UTF-8"><\/head><body>';
-            tableHtml += '<table style="border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 11pt;">';
-            tableHtml += '<colgroup><col width="45"><col width="105"><col width="175"><col width="125"><col width="25"><col width="25"><col width="25"><col width="185"><col width="55"><col width="190"><col width="190"><\/colgroup><tbody>';
-
-            tableHtml += '<tr style="height: 36px;"><td colspan="4" style="font-size: 22pt; font-weight: bold; color: #1f4e78; text-align: center; vertical-align: middle; padding: 4px 8px;">DETAILS<\/td><td><\/td><td><\/td><td><\/td><td colspan="4" style="font-size: 22pt; font-weight: bold; color: #1f4e78; text-align: center; vertical-align: middle; padding: 4px 8px;">EVALUATION AGENT<\/td><\/tr>';
-            tableHtml += '<tr style="height: 14px;"><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><\/tr>';
-
-            const cellPad = "padding: 3px 8px; vertical-align: middle;";
-
-            for (let r = 0; r < finalGridRows; r++) {
-                const rowHeight = (r === 7 || r === 11) ? "42px" : "24px";
-                tableHtml += `<tr style="height: ${rowHeight};">`;
-
-                const leftItem = leftRows[r];
-                if (!leftItem || leftItem.type === "spacer") {
-                    tableHtml += `<td colspan="4" style="${cellPad}"><\/td>`;
-                } else if (leftItem.type === "agent-header") {
-                    tableHtml += `<td colspan="4" style="background-color: #1f4e78; color: #ffffff; font-weight: bold; text-align: left; ${cellPad} ${bdr}">${leftItem.text}<\/td>`;
-                } else if (leftItem.type === "col-header") {
-                    tableHtml += `<td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">N°<\/td>`;
-                    tableHtml += `<td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${dateColHeader}<\/td>`;
-                    tableHtml += `<td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">Référence<\/td>`;
-                    tableHtml += `<td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">Famille<\/td>`;
-                } else if (leftItem.type === "data") {
-                    const bg = leftItem.odd ? "#f8fafc" : "#ffffff";
-                    tableHtml += `<td style="background-color: ${bg}; text-align: center; ${cellPad} ${bdr}">${leftItem.index}<\/td>`;
-                    tableHtml += `<td style="background-color: ${bg}; text-align: center; ${cellPad} ${bdr}">${leftItem.date}<\/td>`;
-                    tableHtml += `<td style="background-color: ${bg}; font-weight: bold; ${cellPad} ${bdr}">${leftItem.ref}<\/td>`;
-                    tableHtml += `<td style="background-color: ${bg}; ${cellPad} ${bdr}">${leftItem.famille}<\/td>`;
-                } else if (leftItem.type === "total") {
-                    tableHtml += `<td colspan="3" style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; text-align: right; ${cellPad} ${bdr}">TOTAL RÉFÉRENCES (${leftItem.agent}) :<\/td>`;
-                    tableHtml += `<td style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${leftItem.count}<\/td>`;
-                }
-                tableHtml += '<td colspan="3"><\/td>';
-
-                if (r === 0) {
-                    tableHtml += `<td colspan="2" style="background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">AGENTS ACTIFS (${agentsIndividuelsTries.length})<\/td>`;
-                } else if (r <= agentsIndividuelsTries.length) {
-                    const agObj = agentsIndividuelsTries[r - 1];
-                    const rowBg = (r % 2 === 0) ? "#f8fafc" : "#ffffff";
-                    tableHtml += `<td style="background-color: ${rowBg}; color: #0f172a; ${cellPad} ${bdr}">${agObj.nomAffiche}<\/td>`;
-                    tableHtml += `<td style="background-color: ${rowBg}; color: #0f172a; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${agObj.total}<\/td>`;
-                } else {
-                    tableHtml += '<td colspan="2"><\/td>';
-                }
-
-                if (r === 0) {
-                    tableHtml += `<td colspan="2" style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL GÉNÉRAL RÉFÉRENCES<\/td>`;
-                } else if (r === 1) {
-                    tableHtml += `<td colspan="2" style="background-color: #eff6ff; color: #1e3a8a; font-weight: bold; font-size: 14pt; text-align: center; ${cellPad} ${bdr}">${totalGeneral}<\/td>`;
-                } else if (r === 2) {
-                    tableHtml += `<td colspan="2" style="background-color: #0369a1; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL SEMAINE RÉFÉRENCES<\/td>`;
-                } else if (r === 3) {
-                    tableHtml += `<td colspan="2" style="background-color: #e0f2fe; color: #0c4a6e; font-weight: bold; font-size: 14pt; text-align: center; ${cellPad} ${bdr}">${totalSemaineExcel}<\/td>`;
-                } else if (r === 5) {
-                    tableHtml += `<td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">BINÔME FAIBLE<\/td>`;
-                    tableHtml += `<td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">BINÔME FORT<\/td>`;
-                } else if (r === 6) {
-                    tableHtml += `<td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${minCount}<\/td>`;
-                    tableHtml += `<td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${maxCount}<\/td>`;
-                } else if (r === 7) {
-                    tableHtml += `<td style="background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${minAgentText}<\/td>`;
-                    tableHtml += `<td style="background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${maxAgentText}<\/td>`;
-                } else if (r === 9) {
-                    tableHtml += `<td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">AGENT FAIBLE<\/td>`;
-                    tableHtml += `<td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">AGENT FORT<\/td>`;
-                } else if (r === 10) {
-                    tableHtml += `<td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${faibleCount}<\/td>`;
-                    tableHtml += `<td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${fortCount}<\/td>`;
-                } else if (r === 11) {
-                    tableHtml += `<td style="background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${faibleAgentText}<\/td>`;
-                    tableHtml += `<td style="background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${fortAgentText}<\/td>`;
-                } else {
-                    tableHtml += '<td colspan="2"><\/td>';
-                }
-
-                tableHtml += '<\/tr>';
             }
+        }
+    });
+    const groupesParAgent = {};
+    const agentsIndividuelsMap = {};
 
-            tableHtml += '<\/tbody><\/table><\/body><\/html>';
+    currentFilteredList.forEach(item => {
+        const agentGroupe = item["Agent"] || "Tsy voalaza";
+        if (!groupesParAgent[agentGroupe]) {
+            groupesParAgent[agentGroupe] = [];
+        }
+        groupesParAgent[agentGroupe].push({
+            date: item["Date Saisie"],
+            ref: item["Référence"],
+            famille: item["Famille"]
+        });
 
-            const blob = new Blob(["\ufeff", tableHtml], { type: "application/vnd.ms-excel;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
+        const nomsSepares = agentGroupe.split(/[\/,]/).map(n => n.trim()).filter(n => n !== "");
+        const dejaComptePourCetteRef = new Set();
+        nomsSepares.forEach(nom => {
+            const cle = nom.toUpperCase();
+            if (!dejaComptePourCetteRef.has(cle)) {
+                dejaComptePourCetteRef.add(cle);
+                if (!agentsIndividuelsMap[cle]) {
+                    agentsIndividuelsMap[cle] = { nomAffiche: nom, total: 0 };
+                }
+                agentsIndividuelsMap[cle].total += 1;
+            }
+        });
+    });
 
-            a.href = url;
-            a.download = `Suivi_Saisie_${selectedIsoDate}_${agentSuffix}${pageSuffix}.xls`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+    const agentsTries = Object.keys(groupesParAgent).sort();
+
+    // ORDRE CROISSANT (ISA KELY MANKANY AMIN'NY LEHIBE)
+    const agentsIndividuelsTries = Object.values(agentsIndividuelsMap).sort((a, b) => {
+        if (a.total !== b.total) {
+            return a.total - b.total;
+        }
+        return a.nomAffiche.localeCompare(b.nomAffiche, 'fr', { sensitivity: 'base' });
+    });
+
+    const totalGeneral = currentFilteredList.length;
+    let minCount = Infinity, minElem = Infinity, minAgents = [];
+    let maxCount = -Infinity, maxElem = -Infinity, maxAgents = [];
+
+    agentsTries.forEach(agent => {
+        const refCount = groupesParAgent[agent].length;
+        const elemCount = localElementsCount[agent] || 0;
+        if (refCount < minCount || (refCount === minCount && elemCount < minElem)) {
+            minCount = refCount; minElem = elemCount; minAgents = [agent];
+        } else if (refCount === minCount && elemCount === minElem) {
+            minAgents.push(agent);
+        }
+        if (refCount > maxCount || (refCount === maxCount && elemCount > maxElem)) {
+            maxCount = refCount; maxElem = elemCount; maxAgents = [agent];
+        } else if (refCount === maxCount && elemCount === maxElem) {
+            maxAgents.push(agent);
+        }
+    });
+
+    const minAgentText = `${minAgents.join(", ")} (${minElem} élém.)`;
+    const maxAgentText = `${maxAgents.join(", ")} (${maxElem} élém.)`;
+
+    let faibleCount = Infinity, faibleElem = Infinity, faibleAgents = [];
+    let fortCount = -Infinity, fortElem = -Infinity, fortAgents = [];
+
+    agentsIndividuelsTries.forEach(agObj => {
+        const refCount = agObj.total;
+        const elemCount = individualElementsCount[agObj.nomAffiche.toUpperCase()] || 0;
+        if (refCount < faibleCount || (refCount === faibleCount && elemCount < faibleElem)) {
+            faibleCount = refCount; faibleElem = elemCount; faibleAgents = [agObj.nomAffiche];
+        } else if (refCount === faibleCount && elemCount === faibleElem) {
+            faibleAgents.push(agObj.nomAffiche);
+        }
+        if (refCount > fortCount || (refCount === fortCount && elemCount > fortElem)) {
+            fortCount = refCount; fortElem = elemCount; fortAgents = [agObj.nomAffiche];
+        } else if (refCount === fortCount && elemCount === fortElem) {
+            fortAgents.push(agObj.nomAffiche);
+        }
+    });
+
+    const faibleAgentText = `${faibleAgents.join(", ")} (${faibleElem} élém.)`;
+    const fortAgentText = `${fortAgents.join(", ")} (${fortElem} élém.)`;
+    const leftRows = [];
+    agentsTries.forEach(agent => {
+        const liste = groupesParAgent[agent];
+        leftRows.push({ type: "agent-header", text: `AGENT : ${agent}` });
+        leftRows.push({ type: "col-header" });
+        liste.forEach((row, idx) => {
+            leftRows.push({ type: "data", index: idx + 1, ...row, odd: idx % 2 !== 0 });
+        });
+        leftRows.push({ type: "total", agent: agent, count: liste.length });
+        leftRows.push({ type: "spacer" });
+    });
+
+    const totalGridRows = Math.max(leftRows.length, agentsIndividuelsTries.length + 4);
+    const finalGridRows = Math.max(totalGridRows, 13);
+    const bdr = "border: 1px solid #94a3b8;";
+    const cellPad = "padding: 3px 8px; vertical-align: middle;";
+
+    let tableHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">';
+    tableHtml += '<head><meta charset="UTF-8"><\/head><body>';
+    tableHtml += '<table style="border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 11pt;">';
+    tableHtml += '<colgroup><col width="45"><col width="105"><col width="175"><col width="125"><col width="25"><col width="25"><col width="25"><col width="185"><col width="55"><col width="190"><col width="190"><\/colgroup><tbody>';
+    tableHtml += '<tr style="height: 36px;"><td colspan="4" style="font-size: 22pt; font-weight: bold; color: #1f4e78; text-align: center; vertical-align: middle; padding: 4px 8px;">DETAILS<\/td><td><\/td><td><\/td><td><\/td><td colspan="4" style="font-size: 22pt; font-weight: bold; color: #1f4e78; text-align: center; vertical-align: middle; padding: 4px 8px;">EVALUATION AGENT<\/td><\/tr>';
+    tableHtml += '<tr style="height: 14px;"><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><td><\/td><\/tr>';
+
+    for (let r = 0; r < finalGridRows; r++) {
+        const rowHeight = (r === 7 || r === 11) ? "42px" : "24px";
+        tableHtml += `<tr style="height: ${rowHeight};">`;
+
+        const leftItem = leftRows[r];
+        if (!leftItem || leftItem.type === "spacer") {
+            tableHtml += `<td colspan="4" style="${cellPad}"><\/td>`;
+        } else if (leftItem.type === "agent-header") {
+            tableHtml += `<td colspan="4" style="background-color: #1f4e78; color: #ffffff; font-weight: bold; text-align: left; ${cellPad} ${bdr}">${leftItem.text}<\/td>`;
+        } else if (leftItem.type === "col-header") {
+            tableHtml += `<td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">N°<\/td><td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${dateColHeader}<\/td><td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">Référence<\/td><td style="background-color: #d9e1f2; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">Famille<\/td>`;
+        } else if (leftItem.type === "data") {
+            const bg = leftItem.odd ? "#f8fafc" : "#ffffff";
+            tableHtml += `<td style="background-color: ${bg}; text-align: center; ${cellPad} ${bdr}">${leftItem.index}<\/td><td style="background-color: ${bg}; text-align: center; ${cellPad} ${bdr}">${leftItem.date}<\/td><td style="background-color: ${bg}; font-weight: bold; ${cellPad} ${bdr}">${leftItem.ref}<\/td><td style="background-color: ${bg}; ${cellPad} ${bdr}">${leftItem.famille}<\/td>`;
+        } else if (leftItem.type === "total") {
+            tableHtml += `<td colspan="3" style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; text-align: right; ${cellPad} ${bdr}">TOTAL RÉFÉRENCES (${leftItem.agent}) :<\/td><td style="background-color: #e9edf4; color: #1f4e78; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${leftItem.count}<\/td>`;
         }
 
-        window.addEventListener("DOMContentLoaded", () => {
-            dessinerGraduationsCompteur();
-            initDateInput();
-            chargerDonnees();
-            setInterval(chargerDonnees, 15000);
-        });
-    </script>
+        tableHtml += '<td colspan="3"><\/td>';
+
+        if (r === 0) {
+            tableHtml += `<td colspan="2" style="background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">AGENTS ACTIFS (${agentsIndividuelsTries.length})<\/td>`;
+        } else if (r <= agentsIndividuelsTries.length) {
+            const agObj = agentsIndividuelsTries[r - 1];
+            const rowBg = (r % 2 === 0) ? "#f8fafc" : "#ffffff";
+            tableHtml += `<td style="background-color: ${rowBg}; color: #0f172a; ${cellPad} ${bdr}">${agObj.nomAffiche}<\/td><td style="background-color: ${rowBg}; color: #0f172a; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${agObj.total}<\/td>`;
+        } else {
+            tableHtml += '<td colspan="2"><\/td>';
+        }
+
+        if (r === 0) {
+            tableHtml += `<td colspan="2" style="background-color: #1d4ed8; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL GÉNÉRAL RÉFÉRENCES<\/td>`;
+        } else if (r === 1) {
+            tableHtml += `<td colspan="2" style="background-color: #eff6ff; color: #1e3a8a; font-weight: bold; font-size: 14pt; text-align: center; ${cellPad} ${bdr}">${totalGeneral}<\/td>`;
+        } else if (r === 2) {
+            tableHtml += `<td colspan="2" style="background-color: #0369a1; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">TOTAL SEMAINE RÉFÉRENCES<\/td>`;
+        } else if (r === 3) {
+            tableHtml += `<td colspan="2" style="background-color: #e0f2fe; color: #0c4a6e; font-weight: bold; font-size: 14pt; text-align: center; ${cellPad} ${bdr}">${totalSemaineExcel}<\/td>`;
+        } else if (r === 5) {
+            tableHtml += `<td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MIN RÉFÉRENCE<\/td><td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">MAX RÉFÉRENCE<\/td>`;
+        } else if (r === 6) {
+            tableHtml += `<td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${minCount}<\/td><td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${maxCount}<\/td>`;
+        } else if (r === 7) {
+            tableHtml += `<td style="background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${minAgentText}<\/td><td style="background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${maxAgentText}<\/td>`;
+        } else if (r === 9) {
+            tableHtml += `<td style="background-color: #b91c1c; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">AGENT FAIBLE<\/td><td style="background-color: #15803d; color: #ffffff; font-weight: bold; text-align: center; ${cellPad} ${bdr}">AGENT FORT<\/td>`;
+        } else if (r === 10) {
+            tableHtml += `<td style="background-color: #fef2f2; color: #991b1b; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${faibleCount}<\/td><td style="background-color: #f0fdf4; color: #166534; font-weight: bold; font-size: 12pt; text-align: center; ${cellPad} ${bdr}">${fortCount}<\/td>`;
+        } else if (r === 11) {
+            tableHtml += `<td style="background-color: #fef2f2; color: #7f1d1d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${faibleAgentText}<\/td><td style="background-color: #f0fdf4; color: #14532d; font-weight: bold; text-align: center; ${cellPad} ${bdr}">${fortAgentText}<\/td>`;
+        } else {
+            tableHtml += '<td colspan="2"><\/td>';
+        }
+
+        tableHtml += '<\/tr>';
+    }
+
+    tableHtml += '<\/tbody><\/table><\/body><\/html>';
+
+    const blob = new Blob(["\ufeff", tableHtml], { type: "application/vnd.ms-excel;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Suivi_Saisie_${selectedIsoDate}_${agentSuffix}${pageSuffix}.xls`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    dessinerGraduationsCompteur();
+    initDateInput();
+    chargerDonnees();
+    setInterval(chargerDonnees, 15000);
+});
+</script>
 </body>
 </html>
